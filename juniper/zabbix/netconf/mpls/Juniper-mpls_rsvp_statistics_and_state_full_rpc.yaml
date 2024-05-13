@@ -1,0 +1,153 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: b2ec6b780f1e42f7a21396021047e0b4
+      name: Juniper
+  templates:
+    - uuid: ca5d7982a1c04041ae432aeeebfa0d23
+      template: Juniper-mpls_rsvp_statistics_and_state_full_rpc
+      name: Juniper-mpls_rsvp_statistics_and_state_full_rpc
+      description: |
+        Juniper RPC ONLY - mpls discovery lsp
+        
+        netconf script use: mpls_rsvp_state_and_stats.py
+        
+        Discovery ingress lsp and active path and statistics.
+      templates:
+        - name: Juniper-mpls_rsvp_statistics_and_state_full_rpc_add_lld
+      groups:
+        - name: Juniper
+      items:
+        - uuid: c89e43fcdf644317a4b0615ccfb10054
+          name: 'RPC MPLS LSP STATE'
+          type: EXTERNAL
+          key: 'mpls_rsvp_state_and_stats.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-o", "elem_set"]'
+          delay: 8m
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          tags:
+            - tag: Application
+              value: 'MPLS LSP'
+      macros:
+        - macro: '{$JUN_RPC_KEY_PATH}'
+          value: /usr/lib/zabbix/externalscripts/rsa
+        - macro: '{$JUN_RPC_SSH_USER}'
+          value: netconf
+    - uuid: b1f11e2a906a4111a8ae35910249a271
+      template: Juniper-mpls_rsvp_statistics_and_state_full_rpc_add_lld
+      name: Juniper-mpls_rsvp_statistics_and_state_full_rpc_add_lld
+      description: |
+        Juniper RPC ONLY - mpls discovery lsp
+        
+        netconf script use: mpls_rsvp_state_and_stats.py
+        
+        Discovery ingress lsp and active path and statistics.
+      groups:
+        - name: Juniper
+      items:
+        - uuid: 392c4e6765274aa79517c1530ac8b048
+          name: 'RPC MPLS LSP STATS'
+          type: EXTERNAL
+          key: 'mpls_rsvp_state_and_stats.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-o", "elem_set", "-s"]'
+          delay: 5m
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          tags:
+            - tag: Application
+              value: 'MPLS LSP'
+      discovery_rules:
+        - uuid: a9a4d64a1aba4516b81f8458fd1fa956
+          name: 'MPLS lsp ingress discovery'
+          type: EXTERNAL
+          key: 'mpls_rsvp_state_and_stats.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-o", "lld_set"]'
+          delay: '0;60/1-1,04:14-04:15;60/4-4,04:14-04:15'
+          lifetime: 6h
+          item_prototypes:
+            - uuid: 0cf6b58d0a24471ebfcea98fb132d4ae
+              name: 'LSP {#LSPNAME} {#LSPALIAS} - statistics bytes'
+              type: DEPENDENT
+              key: 'mpls.lsp.statistics_B[{#LSPNAME}]'
+              delay: '0'
+              history: 2w
+              trends: 120d
+              value_type: FLOAT
+              units: bps
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - string(//mpls-lsp/lsp-bytes)
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              master_item:
+                key: 'mpls.lsp_statistics[{#LSPNAME}]'
+              tags:
+                - tag: Application
+                  value: 'MPLS LSP STATISTICS'
+            - uuid: 3cb88dda38444f14b4a812923781e606
+              name: 'LSP {#LSPNAME} {#LSPALIAS} - statistics packets'
+              type: DEPENDENT
+              key: 'mpls.lsp.statistics_p[{#LSPNAME}]'
+              delay: '0'
+              history: 2w
+              trends: 120d
+              units: pkts
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - string(//mpls-lsp/lsp-packets)
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              master_item:
+                key: 'mpls.lsp_statistics[{#LSPNAME}]'
+              tags:
+                - tag: Application
+                  value: 'MPLS LSP STATISTICS'
+            - uuid: 5347f04b8dd647099fc9b72493bec177
+              name: 'LSP {#LSPNAME}'
+              type: DEPENDENT
+              key: 'mpls.lsp_statistics[{#LSPNAME}]'
+              delay: '0'
+              history: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - '//rsvp-session/mpls-lsp[name[text()[normalize-space()=''{#LSPNAME}'']]]'
+              master_item:
+                key: 'mpls_rsvp_state_and_stats.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-o", "elem_set", "-s"]'
+              tags:
+                - tag: Application
+                  value: 'MPLS LSP'
+          graph_prototypes:
+            - uuid: aafacf073e3146338763db30c65eaf16
+              name: 'Lsp Statistics {#LSPNAME}'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: E91E63
+                  item:
+                    host: Juniper-mpls_rsvp_statistics_and_state_full_rpc_add_lld
+                    key: 'mpls.lsp.statistics_B[{#LSPNAME}]'
+                - sortorder: '1'
+                  color: 4000FF
+                  yaxisside: RIGHT
+                  item:
+                    host: Juniper-mpls_rsvp_statistics_and_state_full_rpc_add_lld
+                    key: 'mpls.lsp.statistics_p[{#LSPNAME}]'
+          lld_macro_paths:
+            - lld_macro: '{#LSPALIAS}'
+              path: $.description
+            - lld_macro: '{#LSPNAME}'
+              path: $.name
+      macros:
+        - macro: '{$JUN_RPC_KEY_PATH}'
+          value: /usr/lib/zabbix/externalscripts/rsa
+        - macro: '{$JUN_RPC_SSH_USER}'
+          value: netconf
