@@ -3,9 +3,9 @@
 2. Экспортировать шаблон на савой заббикс сервер
     1. Создать закрытый ключ и пользователя для работы по netconf
     2. Разрешить команды для пользователя netconf:
-    > set system login class test permissions view
-    > set system login class test allow-commands "(^show interfaces descriptions)"
+        > set system login class test permissions view
+        > set system login class test allow-commands "(^show interfaces descriptions)"
     3. В шаблоне или на устройстве задать значение для макросов:
-> {$JUN_RPC_KEY_PATH} - путь до ключа ssh 
-> {$JUN_RPC_SSH_USER} - логин для работы по netconf
+        > {$JUN_RPC_KEY_PATH} - путь до ключа ssh 
+        > {$JUN_RPC_SSH_USER} - логин для работы по netconf
  
