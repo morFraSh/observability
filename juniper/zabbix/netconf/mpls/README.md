@@ -8,5 +8,6 @@
 > set system login class test allow-commands "(^show interfaces descriptions)"
 
  * **2.3) В шаблоне или на устройстве задать значение для макросов:**
-{$JUN_RPC_KEY_PATH} - путь до ключа ssh, {$JUN_RPC_SSH_USER} - логин для работы по netconf
+> {$JUN_RPC_KEY_PATH} - путь до ключа ssh, 
+> {$JUN_RPC_SSH_USER} - логин для работы по netconf
  
