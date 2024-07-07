@@ -1,0 +1,240 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: b2ec6b780f1e42f7a21396021047e0b4
+      name: Juniper
+  templates:
+    - uuid: 8d8e6c78b0e949a78edc5066c729432d
+      template: 'Juniper COS MX'
+      name: 'Juniper COS MX'
+      groups:
+        - name: Juniper
+      items:
+        - uuid: b198cfb754c843a1a94ff116078ba1c0
+          name: 'Network Interfaces Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},IF-MIB::ifDescr,{#IFALIAS},1.3.6.1.2.1.31.1.1.1.18]'
+          key: juniper.all.interfaces
+          delay: '0;60/1-7,05:00-05:01'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          tags:
+            - tag: Application
+              value: Interfaces
+      discovery_rules:
+        - uuid: 2ce40091b6674084a9823b8056f63ab9
+          name: 'Juniper Cos Counter Interface Discovery'
+          type: DEPENDENT
+          key: juniper.interfaces.cos
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#SNMPVALUE}'
+                value: '(^ge.*|^xe.*|^et.*|^lt.*)\-[0-9]+\/[0-9]+\/([0-9]+$|[0-9]+\:[0-9]+$)|(^ae[0-9]+|^ps[0-9]+)$'
+                formulaid: A
+          lifetime: 1d
+          description: |
+            Filters default:
+            {#SNMPVALUE} = (^ge.*|^xe.*|^et.*|^lt.*)\-[0-9]+\/[0-9]+\/([0-9]+$|[0-9]+\:[0-9]+$)|(^ae[0-9]+|^ps[0-9]+)$
+          item_prototypes:
+            - uuid: 1053fd4c505b45d69a400b04c45a4f8c
+              name: '{#SNMPVALUE} - Tail_Drop - Assured Fwd.'
+              type: SNMP_AGENT
+              snmp_oid: 'JUNIPER-COS-MIB::jnxCosIfqTailDropPkts.{#SNMPINDEX}."assured-forwarding"'
+              key: 'jnxCosIfqTailDropPkts.AF.[{#SNMPINDEX}]'
+              delay: 15m
+              history: 20d
+              trends: 100d
+              status: DISABLED
+              units: pckt
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: Application
+                  value: 'Tail Drop'
+            - uuid: 79e6940d19a440869d5398287ed8e861
+              name: '{#SNMPVALUE} - Tail_Drop - Best Effort'
+              type: SNMP_AGENT
+              snmp_oid: 'JUNIPER-COS-MIB::jnxCosIfqTailDropPkts.{#SNMPINDEX}."best-effort"'
+              key: 'jnxCosIfqTailDropPkts.BE.[{#SNMPINDEX}]'
+              delay: 15m
+              history: 20d
+              trends: 100d
+              status: DISABLED
+              units: pckt
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: Application
+                  value: 'Tail Drop'
+            - uuid: 22b96bfc47d14c30a72a3fb4540342b5
+              name: '{#SNMPVALUE} - Tail_Drop - Expedited Fwd.'
+              type: SNMP_AGENT
+              snmp_oid: 'JUNIPER-COS-MIB::jnxCosIfqTailDropPkts.{#SNMPINDEX}."expedited-forwarding"'
+              key: 'jnxCosIfqTailDropPkts.EF.[{#SNMPINDEX}]'
+              delay: 15m
+              history: 20d
+              trends: 100d
+              status: DISABLED
+              units: pckt
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: Application
+                  value: 'Tail Drop'
+            - uuid: 2550885485254a32b438521d239c3ce2
+              name: '{#SNMPVALUE} - Tail_Drop - Net. Control'
+              type: SNMP_AGENT
+              snmp_oid: 'JUNIPER-COS-MIB::jnxCosIfqTailDropPkts.{#SNMPINDEX}."network-control"'
+              key: 'jnxCosIfqTailDropPkts.NC.[{#SNMPINDEX}]'
+              delay: 15m
+              history: 20d
+              trends: 100d
+              status: DISABLED
+              units: pckt
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: Application
+                  value: 'Tail Drop'
+            - uuid: 15786c21182a40c99ef81434e9fb6340
+              name: '{#SNMPVALUE} - Red_Drop - Assured Fwd.'
+              type: SNMP_AGENT
+              snmp_oid: 'JUNIPER-COS-MIB::jnxCosIfqTotalRedDropPkts.{#SNMPINDEX}."assured-forwarding"'
+              key: 'jnxCosIfqTotalRedDropPkts.AF.[{#SNMPINDEX}]'
+              delay: 15m
+              history: 20d
+              trends: 100d
+              status: DISABLED
+              units: pckt
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: Application
+                  value: 'Red Drop'
+            - uuid: 45d09070d9414cb1ae1ba8fb22d12496
+              name: '{#SNMPVALUE} - Red_Drop - Best Effort'
+              type: SNMP_AGENT
+              snmp_oid: 'JUNIPER-COS-MIB::jnxCosIfqTotalRedDropPkts.{#SNMPINDEX}."best-effort"'
+              key: 'jnxCosIfqTotalRedDropPkts.BE.[{#SNMPINDEX}]'
+              delay: 15m
+              history: 20d
+              trends: 100d
+              status: DISABLED
+              units: pckt
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: Application
+                  value: 'Red Drop'
+            - uuid: 61e240f3e99045d38a59589165921401
+              name: '{#SNMPVALUE} - Red_Drop - Expedited Fwd.'
+              type: SNMP_AGENT
+              snmp_oid: 'JUNIPER-COS-MIB::jnxCosIfqTotalRedDropPkts.{#SNMPINDEX}."expedited-forwarding"'
+              key: 'jnxCosIfqTotalRedDropPkts.EF.[{#SNMPINDEX}]'
+              delay: 15m
+              history: 20d
+              trends: 100d
+              status: DISABLED
+              units: pckt
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: Application
+                  value: 'Red Drop'
+            - uuid: 6451f3adc80649ac914094f10fedc219
+              name: '{#SNMPVALUE} - Red_Drop - Net. Control'
+              type: SNMP_AGENT
+              snmp_oid: 'JUNIPER-COS-MIB::jnxCosIfqTotalRedDropPkts.{#SNMPINDEX}."network-control"'
+              key: 'jnxCosIfqTotalRedDropPkts.NC.[{#SNMPINDEX}]'
+              delay: 15m
+              history: 20d
+              trends: 100d
+              status: DISABLED
+              units: pckt
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: Application
+                  value: 'Red Drop'
+          graph_prototypes:
+            - uuid: 5fbbc3cbbded4327a43fa13413f24908
+              name: 'Red/Tail Drop on {#SNMPVALUE} - ({#IFALIAS})'
+              graph_items:
+                - drawtype: BOLD_LINE
+                  color: 199C0D
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper COS MX'
+                    key: 'jnxCosIfqTotalRedDropPkts.AF.[{#SNMPINDEX}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: F63100
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper COS MX'
+                    key: 'jnxCosIfqTotalRedDropPkts.BE.[{#SNMPINDEX}]'
+                - sortorder: '2'
+                  drawtype: BOLD_LINE
+                  color: 2774A4
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper COS MX'
+                    key: 'jnxCosIfqTotalRedDropPkts.EF.[{#SNMPINDEX}]'
+                - sortorder: '3'
+                  drawtype: BOLD_LINE
+                  color: F7941D
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper COS MX'
+                    key: 'jnxCosIfqTotalRedDropPkts.NC.[{#SNMPINDEX}]'
+                - sortorder: '4'
+                  color: FC6EA3
+                  yaxisside: RIGHT
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper COS MX'
+                    key: 'jnxCosIfqTailDropPkts.AF.[{#SNMPINDEX}]'
+                - sortorder: '5'
+                  color: 6C59DC
+                  yaxisside: RIGHT
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper COS MX'
+                    key: 'jnxCosIfqTailDropPkts.BE.[{#SNMPINDEX}]'
+                - sortorder: '6'
+                  color: C7A72D
+                  yaxisside: RIGHT
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper COS MX'
+                    key: 'jnxCosIfqTailDropPkts.EF.[{#SNMPINDEX}]'
+                - sortorder: '7'
+                  color: BA2A5D
+                  yaxisside: RIGHT
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper COS MX'
+                    key: 'jnxCosIfqTailDropPkts.NC.[{#SNMPINDEX}]'
+          master_item:
+            key: juniper.all.interfaces
+      macros:
+        - macro: '{$COS_INT_FILTER_NOT_MATCH}'
+          value: CHANGE_IF_NEEDED
