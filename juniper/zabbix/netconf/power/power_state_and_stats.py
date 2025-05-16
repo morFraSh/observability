@@ -3,7 +3,7 @@
 
 from jnpr.junos import Device
 import jnpr.junos.exception
-#from lxml import etree
+from lxml import etree
 #import jxmlease.xmlparser
 import argparse
 #import json.decoder
@@ -33,10 +33,10 @@ def get_environment_component_information_lld(host, user_netconf, ssh_key, timeo
 
     dev = Device(host=host, user=user_netconf, ssh_private_key_file=ssh_key, gather_facts=False, timeout=timeout_rpc)
     dev.open()
-    env_power_all = dev.rpc.get_environment_component_information(pem=True)
+    env_power_all = dev.rpc.get_environment_pem_information()
     dev.close()
 
-    return env_power_all
+    return etree.tostring(env_power_all, encoding='unicode')
 
 
 
