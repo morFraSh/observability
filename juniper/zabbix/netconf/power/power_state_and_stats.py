@@ -4,17 +4,15 @@
 from jnpr.junos import Device
 import jnpr.junos.exception
 from lxml import etree
-#from lxml import html
-#import jxmlease.xmlparser
+from jxmlease import parse
 from argparse import ArgumentParser, RawTextHelpFormatter
-#import json.decoder
 from json import dumps
 
 
 
 def get_environment_component_information_lld(host, user_netconf, ssh_key, timeout_rpc, mode_sat_a):
-    """Used when mode=elem_set"""
-    
+    """Used when mode=lld_set"""
+    # Делаем чеки 
     if mode_sat_a == "on-sat":
         mode_sat_a = True
     elif mode_sat_a == "no-sat":
@@ -25,35 +23,42 @@ def get_environment_component_information_lld(host, user_netconf, ssh_key, timeo
     env_power_all_sat = None
     json_lld_list = []
     
+    # Делаем запрос на устройство
     dev = Device(host=host, user=user_netconf, ssh_private_key_file=ssh_key, gather_facts=False, timeout=timeout_rpc)
     dev.open()
     env_power_all = dev.rpc.get_environment_pem_information()
     if mode_sat_a is True:
         env_power_all_sat = dev.rpc.get_chassis_environment_pem_satellite_info()
     dev.close()
-
+    
+    # Ищем только те бп, которые отдают power
     env_power_xpath_name = env_power_all.xpath('//environment-component-item[dc-information/dc-detail/dc-power]/name | //environment-component-item[dc-information/dc-detail/str-dc-power]/name')
 
     if mode_sat_a is True:
         env_power_sat_xpath_name = env_power_all_sat.xpath('//environment-component-item[dc-information/dc-detail/dc-power]/name | //environment-component-item[dc-information/dc-detail/str-dc-power]/name')
         env_power_xpath_name = env_power_xpath_name + env_power_sat_xpath_name
+        
     for psu_name in env_power_xpath_name:
-        json_lld_list.append({'name': str(psu_name)})
+        psu_name = parse(etree.tostring(psu_name, encoding='unicode')) 
+        # Вытаскиваем имя и сразу вставляем его в наш список (будущий json lld)
+        json_lld_list.append(psu_name)
+        
 
     return json_lld_list
 
 
 
 def get_environment_component_information_elem(host, user_netconf, ssh_key, timeout_rpc, mode_sat_a):
-    """Used when mode=lld_set"""
+    """Used when mode=elem_set"""
+    # Делаем чеки 
     if mode_sat_a == "on-sat":
         mode_sat_a = True
     elif mode_sat_a == "no-sat":
         mode_sat_a = False
     else:
         return "Error mode_sat_a"
+    # Делаем запрос на устройство
     dev = Device(host=host, user=user_netconf, ssh_private_key_file=ssh_key, gather_facts=False, timeout=timeout_rpc)
-
     dev.open()
     env_power_all = dev.rpc.get_environment_pem_information()
     if mode_sat_a is True:
@@ -80,8 +85,6 @@ def power_exception(mode):
             return result
         else:
             return "Error: mode generic"
-
-
     except (jnpr.junos.exception.ConnectRefusedError,
             jnpr.junos.exception.ConnectUnknownHostError,
             jnpr.junos.exception.ConnectAuthError) as err:
@@ -94,6 +97,7 @@ def power_exception(mode):
     except jnpr.junos.exception.RpcError as err_2:
         print('Error: RPC')
         return err_2
+
 
 
 if __name__ == '__main__':
