@@ -32,15 +32,13 @@ def get_environment_component_information_lld(host, user_netconf, ssh_key, timeo
         env_power_all_sat = dev.rpc.get_chassis_environment_pem_satellite_info()
     dev.close()
 
-    env_power_unit = env_power_all.xpath('//environment-component-item[dc-information/dc-detail/dc-power] | //environment-component-item[dc-information/dc-detail/str-dc-power]')
-    env_power_xpath_name = env_power_unit.xpath('//environment-component-item/name')
+    env_power_xpath_name = env_power_all.xpath('//environment-component-item[dc-information/dc-detail/dc-power]/name | //environment-component-item[dc-information/dc-detail/str-dc-power]/name')
 
     if mode_sat_a is True:
-        env_power_unit_sat = env_power_all_sat.xpath('//environment-component-item[dc-information/dc-detail/dc-power] | //environment-component-item[dc-information/dc-detail/str-dc-power]')
-        env_power_sat_xpath_name = env_power_unit_sat.xpath('//environment-component-item/name')
+        env_power_sat_xpath_name = env_power_all_sat.xpath('//environment-component-item[dc-information/dc-detail/dc-power]/name | //environment-component-item[dc-information/dc-detail/str-dc-power]/name')
         env_power_xpath_name = env_power_xpath_name + env_power_sat_xpath_name
     for psu_name in env_power_xpath_name:
-        json_lld_list.append('name': str(psu_name))
+        json_lld_list.append({'name': str(psu_name)})
 
     return json_lld_list
 
@@ -108,6 +106,7 @@ if __name__ == '__main__':
     parser.add_argument("--key", "-k", help='full path to rsa private key', metavar='')
     parser.add_argument("--host", "-H", help='set host ip address', required=True, metavar='')
     parser.add_argument("--timeout", "-t", help='set host timeout', metavar='')
+    parser.add_argument("--sat", "-s", default='no-sat', help='on-sat or no-sat', metavar='')
     parser.add_argument("--output", "-o", help='set mode lld_set or elem_set', metavar='')
     args = parser.parse_args()
 
@@ -115,6 +114,7 @@ if __name__ == '__main__':
     user_netconf_a = args.user
     ssh_key_a = args.key
     timeout_rpc = args.timeout
+    mode_sat_a = args.sat
     output_a = args.output
 
     print(power_exception(output_a))
