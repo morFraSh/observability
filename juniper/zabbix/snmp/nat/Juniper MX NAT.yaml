@@ -1,0 +1,328 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: b2ec6b780f1e42f7a21396021047e0b4
+      name: Juniper
+  templates:
+    - uuid: 29d579e8ebac4ee99837464b83773dc0
+      template: 'Juniper MX NAT'
+      name: 'Juniper MX NAT'
+      groups:
+        - name: Juniper
+      discovery_rules:
+        - uuid: 984c0aa3e4834979a029034b9e75d092
+          name: 'Nat Src Stats Table'
+          type: EXTERNAL
+          key: 'discovery_juniper_natpool.pl["{HOST.IP}", "{$SNMP_COMMUNITY}", "1"]'
+          delay: 1d
+          lifetime: 1d
+          description: jnxSrcNatStatsTable
+          item_prototypes:
+            - uuid: e0691af4618744c0b10a3de53d42c9e2
+              name: 'Nat Src Num Address Avail [{#NATNAME}]'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.59.1.1.1.1.6.{#NATOID1}'
+              key: 'jnxNatSrcNumAddressAvail[{#NATNAME}]'
+              delay: 1d
+              history: 30d
+              trends: 160d
+              units: addr
+              description: 'The number of ports available with this pool.'
+              
+              tags:
+                - tag: Application
+                  value: 'Nat Src Stats'
+            - uuid: 581bf9b2c12548038f1a25097397b3ef
+              name: 'Nat Src Num Address In Use [{#NATNAME}]'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.59.1.1.1.1.7.{#NATOID1}'
+              key: 'jnxNatSrcNumAddressInUse[{#NATNAME}]'
+              delay: 10m
+              history: 30d
+              trends: 160d
+              units: addr
+              description: |
+                The number of addresses in use from this pool.
+                This attribute is only applicable to pools used with
+                source dynamic translations.
+              
+              tags:
+                - tag: Application
+                  value: 'Nat Src Stats'
+            - uuid: 959ee13fd2e0436697000041cd71b1bb
+              name: 'Nat Src Num Port Avail [{#NATNAME}]'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.59.1.1.1.1.4.{#NATOID1}'
+              key: 'jnxNatSrcNumPortAvail[{#NATNAME}]'
+              delay: 15m
+              history: 30d
+              trends: 160d
+              units: ports
+              
+              tags:
+                - tag: Application
+                  value: 'Nat Src Stats'
+            - uuid: a690dae411bb41529d60d2c18fc3d91d
+              name: 'Nat Src Num Port In use [{#NATNAME}]'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.59.1.1.1.1.5.{#NATOID1}'
+              key: 'jnxNatSrcNumPortInuse[{#NATNAME}]'
+              delay: 15m
+              history: 30d
+              trends: 160d
+              units: ports
+              description: |
+                The number of ports in use for this NAT address entry.
+                This attribute is only applicable to translation with
+                port translation.
+              
+              tags:
+                - tag: Application
+                  value: 'Nat Src Stats'
+            - uuid: de4d20fc67a14279a9fae371ba670ecd
+              name: 'Nat Src Num Sessions [{#NATNAME}]'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.59.1.1.1.1.8.{#NATOID1}'
+              key: 'jnxNatSrcNumSessions[{#NATNAME}]'
+              delay: 10m
+              history: 30d
+              trends: 160d
+              units: sess
+              description: |
+                The number of sessions are in use based on this NAT address
+                entry.
+              
+              tags:
+                - tag: Application
+                  value: 'Nat Src Stats'
+              trigger_prototypes:
+                - uuid: ae657c27f1f14c2ca188d12dc303a63b
+                  expression: 'avg(/Juniper MX NAT/jnxNatSrcNumSessions[{#NATNAME}],#2)<5'
+                  name: 'Warn Use Sessions on Pool {#NATNAME}'
+                  opdata: 'Session Num:  {ITEM.LASTVALUE1}'
+                  status: DISABLED
+                  priority: DISASTER
+                  tags:
+                    - tag: call
+                      value: 'yes'
+            - uuid: d809d46a4acd4aeea2c93f0fe5b7fd0d
+              name: 'Nat Src Pool Type [{#NATNAME}]'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.59.1.1.1.1.3.{#NATOID1}'
+              key: 'jnxNatSrcPoolType[{#NATNAME}]'
+              delay: 1d
+              history: 30d
+              trends: 160d
+              description: |
+                Source NAT can do address translation with or without port
+                translation.  The source port pool type indicates
+                whether the address translation is done with port or without
+                the port, or if it is a static translation.
+              valuemap:
+                name: 'JUNIPER::jnxNatType'
+              
+              tags:
+                - tag: Application
+                  value: 'Nat Src Stats'
+            - uuid: 62009a6b57e34bc088b572961d8ec75e
+              name: 'Nat Src Xlated Addr Type [{#NATNAME}]'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.59.1.1.1.1.2.{#NATOID1}'
+              key: 'jnxNatSrcXlatedAddrType[{#NATNAME}]'
+              delay: 1d
+              history: 30d
+              trends: 160d
+              description: |
+                The type of dynamic source IP address allocated from
+                the address pool used in the NAT translation.
+                For NAT MIB, supporting ipv4(1) and ipv6(2) only.
+              valuemap:
+                name: 'JUNIPER::jnxAddrType'
+              
+              tags:
+                - tag: Application
+                  value: 'Nat Src Stats'
+          trigger_prototypes:
+            - uuid: 8644ef64d895494f8572c1b0db5cc341
+              expression: '(last(/Juniper MX NAT/jnxNatSrcNumPortInuse[{#NATNAME}])/(last(/Juniper MX NAT/jnxNatSrcNumPortAvail[{#NATNAME}])/100))>{$PORT.USE.WARN:"{#NATNAME}"}'
+              name: 'Warn Use Ports on Pool {#NATNAME}'
+              opdata: 'Ports Num:  {ITEM.LASTVALUE1}, Avail: {ITEM.LASTVALUE2}'
+              status: DISABLED
+              priority: HIGH
+              tags:
+                - tag: nat
+                  value: ports
+          graph_prototypes:
+            - uuid: 4f6a1029a9a448f9aa4876f2c3bdda2c
+              name: 'NAT Stats Session: {#NATNAME}'
+              graph_items:
+                - drawtype: FILLED_REGION
+                  color: '990099'
+                  item:
+                    host: 'Juniper MX NAT'
+                    key: 'jnxNatSrcNumSessions[{#NATNAME}]'
+            - uuid: 76aaa69237854be6b3637375303a82f1
+              name: 'NAT Stats Use: {#NATNAME}'
+              graph_items:
+                - drawtype: BOLD_LINE
+                  color: EEEE00
+                  yaxisside: RIGHT
+                  item:
+                    host: 'Juniper MX NAT'
+                    key: 'jnxNatSrcNumAddressInUse[{#NATNAME}]'
+                - sortorder: '1'
+                  drawtype: FILLED_REGION
+                  color: '008888'
+                  item:
+                    host: 'Juniper MX NAT'
+                    key: 'jnxNatSrcNumPortInuse[{#NATNAME}]'
+          
+        - uuid: 3ac8b764a40d4a22b27a0fd60b098d9b
+          name: 'Nat Rule Table'
+          type: EXTERNAL
+          key: 'discovery_juniper_natpool.pl["{HOST.IP}", "{$SNMP_COMMUNITY}", "2"]'
+          delay: 1d
+          description: 'jnxNatRuleTable (2)'
+          item_prototypes:
+            - uuid: ff38a15244c341c78e3e2f5006ef3640
+              name: 'NatRuleTransHits [{#NATNAME}]'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.59.1.1.2.1.3.{#NATOID1}'
+              key: 'jnxNatRuleTransHits[{#NATNAME}]'
+              delay: 5m
+              history: 30d
+              trends: 160d
+              units: Hits
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              
+              tags:
+                - tag: Application
+                  value: 'Nat Rule'
+            - uuid: 9da11f39afd04b149d952779fcbde2ff
+              name: 'NatRuleType [{#NATNAME}]'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.59.1.1.2.1.2.{#NATOID1}'
+              key: 'jnxNatRuleType[{#NATNAME}]'
+              delay: 1d
+              history: 30d
+              trends: 160d
+              valuemap:
+                name: 'JUNIPER::jnxNatType'
+              
+              tags:
+                - tag: Application
+                  value: 'Nat Rule'
+          graph_prototypes:
+            - uuid: 7ea39403ad73420999a35c1abac9aed9
+              name: 'NAT Rule: {#NATNAME}'
+              graph_items:
+                - drawtype: FILLED_REGION
+                  color: 1A7C11
+                  item:
+                    host: 'Juniper MX NAT'
+                    key: 'jnxNatRuleTransHits[{#NATNAME}]'
+          
+        - uuid: 0b4c337c3b624b7ab1dc418cf5ecf16d
+          name: 'Nat Pool Table'
+          type: EXTERNAL
+          key: 'discovery_juniper_natpool.pl["{HOST.IP}", "{$SNMP_COMMUNITY}", "3"]'
+          delay: 1d
+          status: DISABLED
+          description: 'jnxNatPoolTable (3)'
+          item_prototypes:
+            - uuid: 816ed9bdc76b4455aa482d1f946e3539
+              name: 'NatPoolTransHits  [{#NATNAME}]'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.59.1.1.3.1.3.{#NATOID1}'
+              key: 'jnxNatPoolTransHits[{#NATNAME}]'
+              delay: 5m
+              history: 30d
+              trends: 160d
+              units: Hits
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              
+              tags:
+                - tag: Application
+                  value: 'Nat Pool Table'
+            - uuid: 65f751d7aebd40688e2f7da32873540f
+              name: 'NatPoolType [{#NATNAME}]'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.59.1.1.3.1.2.{#NATOID1}'
+              key: 'jnxNatPoolType[{#NATNAME}]'
+              delay: 1d
+              history: 30d
+              trends: 160d
+              valuemap:
+                name: 'JUNIPER::jnxNatType'
+              
+              tags:
+                - tag: Application
+                  value: 'Nat Pool Table'
+          graph_prototypes:
+            - uuid: a1738dca4ab042f39ef16671abf3ca8a
+              name: 'NAT Pool: {#NATNAME}'
+              graph_items:
+                - drawtype: FILLED_REGION
+                  color: 0000CC
+                  item:
+                    host: 'Juniper MX NAT'
+                    key: 'jnxNatPoolTransHits[{#NATNAME}]'
+          
+      macros:
+        - macro: '{$PORT.USE.WARN}'
+          value: 50%
+      valuemaps:
+        - uuid: c17b33cda55a423b8f8b7d07d7fe2c57
+          name: 'JUNIPER::jnxAddrType'
+          mappings:
+            - value: '1'
+              newvalue: ipv4
+            - value: '2'
+              newvalue: ipv6
+        - uuid: 4e3567dda19f4fd982cdc2bfdf296d99
+          name: 'JUNIPER::jnxNatType'
+          mappings:
+            - value: '1'
+              newvalue: static
+            - value: '2'
+              newvalue: dynamic-napt
+            - value: '3'
+              newvalue: dynamic-nat
+            - value: '11'
+              newvalue: basic-nat44
+            - value: '12'
+              newvalue: dynamic-nat44
+            - value: '13'
+              newvalue: napt-44
+            - value: '14'
+              newvalue: dnat-44
+            - value: '15'
+              newvalue: stateful-nat64
+            - value: '16'
+              newvalue: stateless-nat64
+            - value: '17'
+              newvalue: basic-nat-pt
+            - value: '18'
+              newvalue: napt-pt
+            - value: '19'
+              newvalue: basic-nat66
+            - value: '20'
+              newvalue: stateless-nat66
+            - value: '21'
+              newvalue: napt-66
+            - value: '22'
+              newvalue: twice-napt-44
+            - value: '23'
+              newvalue: twice-basic-nat-44
+            - value: '24'
+              newvalue: twice-dynamic-nat-44
+            - value: '25'
+              newvalue: det-napt44
+            - value: '26'
+              newvalue: sd-napt44

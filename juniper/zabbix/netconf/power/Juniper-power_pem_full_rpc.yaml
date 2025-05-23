@@ -1,0 +1,130 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: b2ec6b780f1e42f7a21396021047e0b4
+      name: Juniper
+  templates:
+    - uuid: 5ebf04ff7a8b443690d811a670d848be
+      template: Juniper-power_pem_full_rpc
+      name: Juniper-power_pem_full_rpc
+      description: |
+        Juniper RPC ONLY diagnostics optics discovery pem
+        
+        netconf script use: power_pem_state_and_stats.py
+        
+        Discovery pem model: 
+        PWR-MX480-2520-AC-S
+        JPSU-650W-AC-AFO
+        JPSU-650W-AC-AO
+      groups:
+        - name: Juniper
+      items:
+        - uuid: fb40f05341f54eef89d407c5bd1a61d8
+          name: 'RPC Powers PEM'
+          type: EXTERNAL
+          key: 'power_pem_state_and_stats.py["-u", "{$JUN_RPC_SSH_USER}", "-k",  {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-s", {$POWER_PEM_FILTER_SAT}, "-o", "elem_set"]'
+          delay: 10m
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+      discovery_rules:
+        - uuid: b2fd4bddd3f948b7a406fd8750fff453
+          name: 'Power Supply PEM Used Discovery'
+          type: EXTERNAL
+          key: 'power_pem_state_and_stats.py["-u", "{$JUN_RPC_SSH_USER}", "-k",  {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-s", {$POWER_PEM_FILTER_SAT}, "-o", "lld_set"]'
+          delay: 1d
+          lifetime: 20d
+          item_prototypes:
+            - uuid: 0da3c3c104924b468453d94bb7b2e341
+              name: '{#PSUCHNAME}: Power all'
+              type: DEPENDENT
+              key: 'power.all.[{#PSUCHNAME}]'
+              delay: '0'
+              history: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - '//environment-component-item[name[text()[normalize-space()=''{#PSUCHNAME}'']]]'
+              master_item:
+                key: 'power_pem_state_and_stats.py["-u", "{$JUN_RPC_SSH_USER}", "-k",  {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-s", {$POWER_PEM_FILTER_SAT}, "-o", "elem_set"]'
+            - uuid: 056e3566411f47d98736daf79111e057
+              name: '{#PSUCHNAME}: Power supply dc load'
+              type: DEPENDENT
+              key: 'power.dc.load.[{#PSUCHNAME}]'
+              delay: '0'
+              history: 7d
+              value_type: FLOAT
+              units: '%'
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//dc-information/dc-detail/dc-load|//dc-information/dc-detail/str-dc-load)
+              master_item:
+                key: 'power.all.[{#PSUCHNAME}]'
+              tags:
+                - tag: Check_Device
+                  value: Jun_PSU
+                - tag: HDW_PSU
+                  value: '{#PSUCHNAME}'
+              trigger_prototypes:
+                - uuid: f1fe8a5417f144f9a4d7ebcb9c8deb48
+                  expression: 'last(/Juniper-power_pem_full_rpc/power.dc.load.[{#PSUCHNAME}])>{$POWER_PEM.LOAD.HIGHER:"{#PSUCHNAME}"}'
+                  name: 'Power Higher Load {$POWER_PEM.LOAD.HIGHER:"{#PSUCHNAME}"} - {#PSUCHNAME}'
+                  opdata: 'Current: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+                  tags:
+                    - tag: power
+                      value: load
+            - uuid: 4b6f780b012b4b578da6d4f28b0f7107
+              name: '{#PSUCHNAME}: Power supply dc used'
+              type: DEPENDENT
+              key: 'power.dc.used.[{#PSUCHNAME}]'
+              delay: '0'
+              history: 7d
+              value_type: FLOAT
+              units: '!watt'
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//dc-information/dc-detail/dc-power|//dc-information/dc-detail/str-dc-power)
+              master_item:
+                key: 'power.all.[{#PSUCHNAME}]'
+              tags:
+                - tag: Check_Device
+                  value: Jun_PSU
+                - tag: HDW_PSU
+                  value: '{#PSUCHNAME}'
+          graph_prototypes:
+            - uuid: f9f6998fa62a4669a5ee644518060e2a
+              name: 'PSU {#PSUCHNAME}: Power supply capacity dc'
+              graph_items:
+                - drawtype: BOLD_LINE
+                  color: 303F9F
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-power_pem_full_rpc
+                    key: 'power.dc.used.[{#PSUCHNAME}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: D81B60
+                  yaxisside: RIGHT
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-power_pem_full_rpc
+                    key: 'power.dc.load.[{#PSUCHNAME}]'
+          lld_macro_paths:
+            - lld_macro: '{#PSUCHNAME}'
+              path: $.name
+      macros:
+        - macro: '{$JUN_RPC_KEY_PATH}'
+          value: /usr/lib/zabbix/externalscripts/rsa
+        - macro: '{$JUN_RPC_SSH_USER}'
+          value: netconf-access
+        - macro: '{$POWER_PEM.LOAD.HIGHER}'
+          value: 80%
+        - macro: '{$POWER_PEM_FILTER_SAT}'
+          value: no-sat
+          description: 'on-sat (with satellite) or no-sat'
