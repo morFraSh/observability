@@ -1,0 +1,673 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: b2ec6b780f1e42f7a21396021047e0b4
+      name: Juniper
+  templates:
+    - uuid: df4e3b1428e6472ebedf9155a3f90593
+      template: Juniper-optical-interface_full_rpc
+      name: Juniper-optical-interface_full_rpc
+      description: |
+        Juniper RPC ONLY diagnostics optics discovery interface
+        
+        netconf script use: diag_opt_xml_and_json.py
+        
+        Discovery all physical interfaces with ddm but not et *
+        
+        WARNING!!
+        {$DIAG_OPT_FILTER_NOT_MATCHES_HOST} - for interfaces with all 0 values
+      groups:
+        - name: Juniper
+      items:
+        - uuid: 965af19f38b8484ba38a89f4e2f1e927
+          name: 'RPC Optical Int inf'
+          type: EXTERNAL
+          key: 'diag_opt_xml_and_json.py["-u", "{$JUN_RPC_SSH_USER}", "-k",  {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-m", "diag-opt", "-s", {$DIAG_OPT_FILTER_SAT}]'
+          delay: 10m
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+      discovery_rules:
+        - uuid: 9a5857864d5f4e96ac884face03979dc
+          name: 'Diagnostics Optics Discovery'
+          type: EXTERNAL
+          key: 'diag_opt_xml_and_json.py["-u", "{$JUN_RPC_SSH_USER}", "-k",  {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-m", "descr_diag-opt", "-s", {$DIAG_OPT_FILTER_SAT}]'
+          delay: '0;60/1-1,04:00-04:01;60/4-4,04:00-04:01'
+          filter:
+            evaltype: AND
+            conditions:
+              - macro: '{#IFNAME}'
+                value: '{$DIAG_OPT_FILTER_NOT_MATCHES_HOST}'
+                operator: NOT_MATCHES_REGEX
+                formulaid: A
+          lifetime: 20d
+          item_prototypes:
+            - uuid: cde3e3f9f2a6478a958a659dd1598bec
+              name: 'Interface {#IFNAME}({#IFALIAS}): Module temp high alarm'
+              type: DEPENDENT
+              key: 'jnxDomCurrentModuleTempHA[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: °C
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/module-temperature-high-alarm-threshold/@celsius)
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: cb79c4482b134905866ba21b9d25fcc6
+              name: 'Interface {#IFNAME}({#IFALIAS}): Module temp low alarm'
+              type: DEPENDENT
+              key: 'jnxDomCurrentModuleTempLA[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: °C
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/module-temperature-low-alarm-threshold/@celsius)
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: e0828325e1894496af02a4d2ffc45622
+              name: 'Interface {#IFNAME}({#IFALIAS}): Module temp'
+              type: DEPENDENT
+              key: 'jnxDomCurrentModuleTemp[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: °C
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/module-temperature/@celsius)
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Check_Device
+                  value: DDM_Metric
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: 7b3b43cd862f4bf49a352dd2eab8ca9c
+              name: 'Interface {#IFNAME}({#IFALIAS}): RxLaserPower high alarm'
+              type: DEPENDENT
+              key: 'jnxDomCurrentRxLaserPowerHA[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: dbm
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/laser-rx-power-high-alarm-threshold-dbm)
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: 05e80d52eff748adb6a1f7708dbe0fcc
+              name: 'Interface {#IFNAME}({#IFALIAS}): RxLaserPower low alarm'
+              type: DEPENDENT
+              key: 'jnxDomCurrentRxLaserPowerLA[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: dbm
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/laser-rx-power-low-alarm-threshold-dbm)
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: 1634862e05eb4409b3c9ae074187e3fa
+              name: 'Interface {#IFNAME}({#IFALIAS}): RxLaserPower'
+              type: DEPENDENT
+              key: 'jnxDomCurrentRxLaserPower[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: dbm
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/rx-signal-avg-optical-power-dbm|//optics-diagnostics/laser-rx-optical-power-dbm)
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Check_Device
+                  value: DDM_Metric
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: 390c7ce276dc49c6871e63902014ee33
+              name: 'Interface {#IFNAME}({#IFALIAS}): TxLaserPower high alarm'
+              type: DEPENDENT
+              key: 'jnxDomCurrentTxLaserOutputPowerHA[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: dbm
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/laser-tx-power-high-alarm-threshold-dbm)
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: 55ba29dddcc5460c98ed45c4d0baa5b1
+              name: 'Interface {#IFNAME}({#IFALIAS}): TxLaserPower low alarm'
+              type: DEPENDENT
+              key: 'jnxDomCurrentTxLaserOutputPowerLA[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: dbm
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/laser-tx-power-low-alarm-threshold-dbm)
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: 1c05b764dc5241daaa48cbb43e648ccd
+              name: 'Interface {#IFNAME}({#IFALIAS}): TxLaserOutputPower'
+              type: DEPENDENT
+              key: 'jnxDomCurrentTxLaserOutputPower[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: dbm
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/laser-output-power-dbm)
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Check_Device
+                  value: DDM_Metric
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: b988568647694c329810b8c4e0f25533
+              name: 'Interface {#IFNAME}({#IFALIAS}): Module bias'
+              type: DEPENDENT
+              key: 'jnxDomCurrentTxModuleBias[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: mA
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/laser-bias-current)
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Check_Device
+                  value: DDM_Metric
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: 466689bc531f45cb83912c9d7cd36c48
+              name: 'Interface {#IFNAME}({#IFALIAS}): Voltage high alarm'
+              type: DEPENDENT
+              key: 'jnxDomCurrentVHA[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: V
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/module-voltage-high-alarm-threshold)
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '-1'
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: 19e79276b0cc4ca9bb0dc0effb3cd457
+              name: 'Interface {#IFNAME}({#IFALIAS}): Voltage high warn'
+              type: DEPENDENT
+              key: 'jnxDomCurrentVHW[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: V
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/module-voltage-high-warn-threshold)
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '-1'
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: 00c183a6d9ba4203918c893c45452356
+              name: 'Interface {#IFNAME}({#IFALIAS}): Voltage low alarm'
+              type: DEPENDENT
+              key: 'jnxDomCurrentVLA[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: V
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/module-voltage-low-alarm-threshold)
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '-1'
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: 73be36161c0e4fd3b9ffd326aa01ed66
+              name: 'Interface {#IFNAME}({#IFALIAS}): Voltage low warn'
+              type: DEPENDENT
+              key: 'jnxDomCurrentVLW[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: V
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/module-voltage-low-warn-threshold)
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '-1'
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: 2c6a774e14d74283a3fd46f767cc9aa7
+              name: 'Interface {#IFNAME}({#IFALIAS}): Voltage'
+              type: DEPENDENT
+              key: 'jnxDomCurrentVoltage[int.{#IFNAME}]'
+              delay: '0'
+              history: 30d
+              trends: 160d
+              value_type: FLOAT
+              units: V
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - number(//optics-diagnostics/module-voltage)
+                  error_handler: CUSTOM_VALUE
+                  error_handler_params: '-1'
+              master_item:
+                key: 'jnxDom[int.{#IFNAME}]'
+              tags:
+                - tag: Check_Device
+                  value: DDM_Metric
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFALIAS})'
+            - uuid: 6e458bfed9a74673b5864f437b33baa6
+              name: 'Interface {#IFNAME}: DOM'
+              type: DEPENDENT
+              key: 'jnxDom[int.{#IFNAME}]'
+              delay: '0'
+              history: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - '//physical-interface[name[text()[normalize-space()=''{#IFNAME}'']]]'
+              master_item:
+                key: 'diag_opt_xml_and_json.py["-u", "{$JUN_RPC_SSH_USER}", "-k",  {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-m", "diag-opt", "-s", {$DIAG_OPT_FILTER_SAT}]'
+              tags:
+                - tag: Application
+                  value: 'Juniper Optical Interfaces'
+          trigger_prototypes:
+            - uuid: 83583eb1f6cc47c9bad900b14f01bace
+              expression: '((last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPower[int.{#IFNAME}])>last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPowerHA[int.{#IFNAME}])) and ({$RX_HIGH_ALARM:"{#IFNAME}"}=100000)) or (last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPower[int.{#IFNAME}])>{$RX_HIGH_ALARM:"{#IFNAME}"})'
+              name: 'RxLaserPower High Alarm - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}({$RX_HIGH_ALARM:"{#IFNAME}"})'
+              priority: HIGH
+              manual_close: 'YES'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: 119c480ccf7345edbf662b12aed51fdc
+              expression: '((min(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPower[int.{#IFNAME}],5m)>(last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPowerHA[int.{#IFNAME}])*({$IF.DDM.HIGHER:"{#IFNAME}"}/100))) and ({$RX_HIGH_WARNING:"{#IFNAME}"}=100000)) or (min(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPower[int.{#IFNAME}],5m)>{$RX_HIGH_WARNING:"{#IFNAME}"})'
+              name: 'RxLaser power Higher {$IF.DDM.HIGHER:"{#IFNAME}"}% of Alarm - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}({$RX_HIGH_WARNING:"{#IFNAME}"})'
+              priority: WARNING
+              manual_close: 'YES'
+              dependencies:
+                - name: 'RxLaserPower High Alarm - {#IFNAME} - ({#IFALIAS})'
+                  expression: '((last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPower[int.{#IFNAME}])>last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPowerHA[int.{#IFNAME}])) and ({$RX_HIGH_ALARM:"{#IFNAME}"}=100000)) or (last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPower[int.{#IFNAME}])>{$RX_HIGH_ALARM:"{#IFNAME}"})'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: 3a1f0977f11242cc8d37d7567f7f449a
+              expression: '((last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPower[int.{#IFNAME}])<last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPowerLA[int.{#IFNAME}])) and ({$RX_LOW_ALARM:"{#IFNAME}"}=-100000)) or (last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPower[int.{#IFNAME}])<{$RX_LOW_ALARM:"{#IFNAME}"})'
+              name: 'RxLaserPower Low Alarm - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}({$RX_LOW_ALARM:"{#IFNAME}"})'
+              priority: HIGH
+              manual_close: 'YES'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: e7344fb3b2ab46e1bec2c0a59c632df2
+              expression: '((min(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPower[int.{#IFNAME}],5m)<(last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPowerLA[int.{#IFNAME}])*({$IF.DDM.LOWER:"{#IFNAME}"}/100))) and ({$RX_LOW_WARNING:"{#IFNAME}"}=-100000)) or (min(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPower[int.{#IFNAME}],5m)<{$RX_LOW_WARNING:"{#IFNAME}"})'
+              name: 'RxLaser power lower {$IF.DDM.LOWER:"{#IFNAME}"}% of Alarm - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}({$RX_LOW_WARNING:"{#IFNAME}"})'
+              priority: WARNING
+              manual_close: 'YES'
+              dependencies:
+                - name: 'RxLaserPower Low Alarm - {#IFNAME} - ({#IFALIAS})'
+                  expression: '((last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPower[int.{#IFNAME}])<last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPowerLA[int.{#IFNAME}])) and ({$RX_LOW_ALARM:"{#IFNAME}"}=-100000)) or (last(/Juniper-optical-interface_full_rpc/jnxDomCurrentRxLaserPower[int.{#IFNAME}])<{$RX_LOW_ALARM:"{#IFNAME}"})'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: 55cce7fadfb24ef881a746a07321aa32
+              expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentModuleTemp[int.{#IFNAME}])>last(/Juniper-optical-interface_full_rpc/jnxDomCurrentModuleTempHA[int.{#IFNAME}])'
+              name: 'Temp High Alarm - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}'
+              priority: HIGH
+              manual_close: 'YES'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: 42faab32169e4682aa71673afba2cbc4
+              expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentModuleTemp[int.{#IFNAME}])>last(/Juniper-optical-interface_full_rpc/jnxDomCurrentModuleTempHA[int.{#IFNAME}])*0.8'
+              name: 'Temp Higher 80% of Alarm  - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}'
+              priority: AVERAGE
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Temp High Alarm - {#IFNAME} - ({#IFALIAS})'
+                  expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentModuleTemp[int.{#IFNAME}])>last(/Juniper-optical-interface_full_rpc/jnxDomCurrentModuleTempHA[int.{#IFNAME}])'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: 8092c40249ed4e77a989affbd2762eeb
+              expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentTxLaserOutputPower[int.{#IFNAME}])>last(/Juniper-optical-interface_full_rpc/jnxDomCurrentTxLaserOutputPowerHA[int.{#IFNAME}])'
+              name: 'TxLaserPower High Alarm - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}'
+              priority: HIGH
+              manual_close: 'YES'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: 66ebaa683a874a8995196f966858f965
+              expression: 'min(/Juniper-optical-interface_full_rpc/jnxDomCurrentTxLaserOutputPower[int.{#IFNAME}],5m)>last(/Juniper-optical-interface_full_rpc/jnxDomCurrentTxLaserOutputPowerHA[int.{#IFNAME}])*0.9'
+              name: 'TxLaser power Higher 90% of Alarm - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}'
+              priority: WARNING
+              manual_close: 'YES'
+              dependencies:
+                - name: 'TxLaserPower High Alarm - {#IFNAME} - ({#IFALIAS})'
+                  expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentTxLaserOutputPower[int.{#IFNAME}])>last(/Juniper-optical-interface_full_rpc/jnxDomCurrentTxLaserOutputPowerHA[int.{#IFNAME}])'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: 2e05e75391ee4f288788a1407bff6c1a
+              expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentTxLaserOutputPower[int.{#IFNAME}])<last(/Juniper-optical-interface_full_rpc/jnxDomCurrentTxLaserOutputPowerLA[int.{#IFNAME}])'
+              name: 'TxLaserPower Low Alarm - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}'
+              priority: HIGH
+              manual_close: 'YES'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: 944cdec7c2b74e70969a25e09ccacce3
+              expression: 'min(/Juniper-optical-interface_full_rpc/jnxDomCurrentTxLaserOutputPower[int.{#IFNAME}],5m)<last(/Juniper-optical-interface_full_rpc/jnxDomCurrentTxLaserOutputPowerLA[int.{#IFNAME}])*0.9'
+              name: 'TxLaser power lower 90% of Alarm - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}'
+              priority: WARNING
+              manual_close: 'YES'
+              dependencies:
+                - name: 'TxLaserPower Low Alarm - {#IFNAME} - ({#IFALIAS})'
+                  expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentTxLaserOutputPower[int.{#IFNAME}])<last(/Juniper-optical-interface_full_rpc/jnxDomCurrentTxLaserOutputPowerLA[int.{#IFNAME}])'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: 62f94904ee564f3aa84ae1a48b92b658
+              expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentVoltage[int.{#IFNAME}])>last(/Juniper-optical-interface_full_rpc/jnxDomCurrentVHA[int.{#IFNAME}])'
+              name: 'Voltage High Alarm - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}'
+              priority: HIGH
+              manual_close: 'YES'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: 2e9c208559ac4fa1a31ea2fc321e2476
+              expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentVoltage[int.{#IFNAME}])>last(/Juniper-optical-interface_full_rpc/jnxDomCurrentVHW[int.{#IFNAME}])'
+              name: 'Voltage High Warn - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}'
+              priority: AVERAGE
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Voltage High Alarm - {#IFNAME} - ({#IFALIAS})'
+                  expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentVoltage[int.{#IFNAME}])>last(/Juniper-optical-interface_full_rpc/jnxDomCurrentVHA[int.{#IFNAME}])'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: d65590de399040268c28e2bfc41f0923
+              expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentVoltage[int.{#IFNAME}])<last(/Juniper-optical-interface_full_rpc/jnxDomCurrentVLA[int.{#IFNAME}])'
+              name: 'Voltage Low Alarm - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}'
+              priority: HIGH
+              manual_close: 'YES'
+              tags:
+                - tag: ddm
+                  value: crit
+            - uuid: d8f9edb6e64a41aabd25490d51dc6e77
+              expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentVoltage[int.{#IFNAME}])<last(/Juniper-optical-interface_full_rpc/jnxDomCurrentVLW[int.{#IFNAME}])'
+              name: 'Voltage Low Warn - {#IFNAME} - ({#IFALIAS})'
+              opdata: 'Current/Alarm: {ITEM.LASTVALUE1}/{ITEM.LASTVALUE2}'
+              priority: AVERAGE
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Voltage Low Alarm - {#IFNAME} - ({#IFALIAS})'
+                  expression: 'last(/Juniper-optical-interface_full_rpc/jnxDomCurrentVoltage[int.{#IFNAME}])<last(/Juniper-optical-interface_full_rpc/jnxDomCurrentVLA[int.{#IFNAME}])'
+              tags:
+                - tag: ddm
+                  value: crit
+          graph_prototypes:
+            - uuid: d4130d138dc44f76bef313fb593587b2
+              name: 'Interface {#IFNAME} - ({#IFALIAS}): Bias'
+              graph_items:
+                - color: 1A7C11
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-optical-interface_full_rpc
+                    key: 'jnxDomCurrentTxModuleBias[int.{#IFNAME}]'
+            - uuid: 4398a18fe5624c2cbdfc336110e3bcdc
+              name: 'Interface {#IFNAME} - ({#IFALIAS}): Rx/TX Power'
+              graph_items:
+                - color: 42A5F5
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-optical-interface_full_rpc
+                    key: 'jnxDomCurrentRxLaserPower[int.{#IFNAME}]'
+                - sortorder: '1'
+                  color: 43A047
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-optical-interface_full_rpc
+                    key: 'jnxDomCurrentTxLaserOutputPower[int.{#IFNAME}]'
+            - uuid: 68027acf1a7a4640852509d75322660f
+              name: 'Interface {#IFNAME} - ({#IFALIAS}):  Temp'
+              graph_items:
+                - drawtype: DASHED_LINE
+                  color: FF0000
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-optical-interface_full_rpc
+                    key: 'jnxDomCurrentModuleTempHA[int.{#IFNAME}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: 00FF00
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-optical-interface_full_rpc
+                    key: 'jnxDomCurrentModuleTemp[int.{#IFNAME}]'
+                - sortorder: '2'
+                  drawtype: DASHED_LINE
+                  color: 00FFFF
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-optical-interface_full_rpc
+                    key: 'jnxDomCurrentModuleTempLA[int.{#IFNAME}]'
+            - uuid: b5d8e84a3de54f88a1f485537b4305bb
+              name: 'Interface {#IFNAME} - ({#IFALIAS}): V/T/RxPw'
+              graph_items:
+                - color: F63100
+                  yaxisside: RIGHT
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-optical-interface_full_rpc
+                    key: 'jnxDomCurrentModuleTemp[int.{#IFNAME}]'
+                - sortorder: '1'
+                  color: 2774A4
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-optical-interface_full_rpc
+                    key: 'jnxDomCurrentVoltage[int.{#IFNAME}]'
+                - sortorder: '2'
+                  color: F7941D
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-optical-interface_full_rpc
+                    key: 'jnxDomCurrentRxLaserPower[int.{#IFNAME}]'
+            - uuid: c3557fa5845d4e75acb372aa9191972f
+              name: 'Interface {#IFNAME} - ({#IFALIAS}): Voltage'
+              graph_items:
+                - drawtype: DASHED_LINE
+                  color: FF4000
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-optical-interface_full_rpc
+                    key: 'jnxDomCurrentVHA[int.{#IFNAME}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: 43A047
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-optical-interface_full_rpc
+                    key: 'jnxDomCurrentVoltage[int.{#IFNAME}]'
+                - sortorder: '2'
+                  drawtype: DASHED_LINE
+                  color: FFFF00
+                  calc_fnc: ALL
+                  item:
+                    host: Juniper-optical-interface_full_rpc
+                    key: 'jnxDomCurrentVLA[int.{#IFNAME}]'
+          lld_macro_paths:
+            - lld_macro: '{#IFALIAS}'
+              path: $.description
+            - lld_macro: '{#IFNAME}'
+              path: $.name
+      macros:
+        - macro: '{$DIAG_OPT_FILTER_NOT_MATCHES_HOST}'
+          value: CHANGE_IF_NEEDED
+          description: 'Интерфейсы без значений ddm'
+        - macro: '{$DIAG_OPT_FILTER_SAT}'
+          value: no-sat
+          description: 'on-sat (with satellite) or no-sat'
+        - macro: '{$IF.DDM.HIGHER}'
+          value: '90'
+        - macro: '{$IF.DDM.LOWER}'
+          value: '90'
+        - macro: '{$JUN_RPC_KEY_PATH}'
+          description: /usr/lib/zabbix/externalscripts/....
+        - macro: '{$JUN_RPC_SSH_USER}'
+          description: netconf
+        - macro: '{$RX_HIGH_ALARM}'
+          value: '100000'
+        - macro: '{$RX_HIGH_WARNING}'
+          value: '100000'
+        - macro: '{$RX_LOW_ALARM}'
+          value: '-100000'
+        - macro: '{$RX_LOW_WARNING}'
+          value: '-100000'
+      dashboards:
+        - uuid: d5cc035219724286aba7ae61d1081ff6
+          name: 'Diagnostics Optics Discovery'
+          pages:
+            - widgets:
+                - type: graphprototype
+                  width: '24'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: Juniper-optical-interface_full_rpc
+                        name: 'Interface {#IFNAME} - ({#IFALIAS}): Bias'
+                - type: graphprototype
+                  'y': '5'
+                  width: '24'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: Juniper-optical-interface_full_rpc
+                        name: 'Interface {#IFNAME} - ({#IFALIAS}):  Temp'
+                - type: graphprototype
+                  'y': '10'
+                  width: '24'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: Juniper-optical-interface_full_rpc
+                        name: 'Interface {#IFNAME} - ({#IFALIAS}): Voltage'
+                - type: graphprototype
+                  'y': '15'
+                  width: '24'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: Juniper-optical-interface_full_rpc
+                        name: 'Interface {#IFNAME} - ({#IFALIAS}): V/T/RxPw'
