@@ -4,7 +4,7 @@ zabbix_export:
     - uuid: b2ec6b780f1e42f7a21396021047e0b4
       name: Juniper
   templates:
-    - uuid: ca5d7982a1c04041ae432aeeebfa0d23
+    - uuid: 87b67d3099cb4ee7bf47adadb6e95d54
       template: Juniper-mpls_rsvp_statistics_and_state_full_rpc
       name: Juniper-mpls_rsvp_statistics_and_state_full_rpc
       description: |
@@ -13,43 +13,24 @@ zabbix_export:
         netconf script use: mpls_rsvp_state_and_stats.py
         
         Discovery ingress lsp and active path and statistics.
-      templates:
-        - name: Juniper-mpls_rsvp_statistics_and_state_full_rpc_add_lld
       groups:
         - name: Juniper
       items:
-        - uuid: c89e43fcdf644317a4b0615ccfb10054
-          name: 'RPC MPLS LSP STATE'
+        - uuid: 15802474e23d4c9e8b11c09719e7ff6c
+          name: 'RPC MPLS LSP STATS'
           type: EXTERNAL
-          key: 'mpls_rsvp_state_and_stats.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-o", "elem_set"]'
-          delay: 8m
+          key: 'mpls_rsvp_state_and_stats.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-o", "elem_set", "-s"]'
+          delay: 12m
           history: '0'
           trends: '0'
           value_type: TEXT
           tags:
             - tag: Application
               value: 'MPLS LSP'
-      macros:
-        - macro: '{$JUN_RPC_KEY_PATH}'
-          value: /usr/lib/zabbix/externalscripts/rsa
-        - macro: '{$JUN_RPC_SSH_USER}'
-          value: netconf
-    - uuid: b1f11e2a906a4111a8ae35910249a271
-      template: Juniper-mpls_rsvp_statistics_and_state_full_rpc_add_lld
-      name: Juniper-mpls_rsvp_statistics_and_state_full_rpc_add_lld
-      description: |
-        Juniper RPC ONLY - mpls discovery lsp
-        
-        netconf script use: mpls_rsvp_state_and_stats.py
-        
-        Discovery ingress lsp and active path and statistics.
-      groups:
-        - name: Juniper
-      items:
-        - uuid: 392c4e6765274aa79517c1530ac8b048
-          name: 'RPC MPLS LSP STATS'
+        - uuid: 9aa081f3599d4c31b04d39ba876c4aad
+          name: 'RPC MPLS LSP STATE'
           type: EXTERNAL
-          key: 'mpls_rsvp_state_and_stats.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-o", "elem_set", "-s"]'
+          key: 'mpls_rsvp_state_and_stats.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-o", "elem_set"]'
           delay: 5m
           history: '0'
           trends: '0'
@@ -57,15 +38,197 @@ zabbix_export:
           tags:
             - tag: Application
               value: 'MPLS LSP'
-      discovery_rules:
-        - uuid: a9a4d64a1aba4516b81f8458fd1fa956
-          name: 'MPLS lsp ingress discovery'
+        - uuid: fd4b9b8cba344f788e34fadcd4eeded8
+          name: 'RPC MPLS LSP LLD'
           type: EXTERNAL
           key: 'mpls_rsvp_state_and_stats.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-o", "lld_set"]'
           delay: '0;60/1-1,04:14-04:15;60/4-4,04:14-04:15'
-          lifetime: 6h
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          tags:
+            - tag: Application
+              value: 'MPLS LSP'
+      discovery_rules:
+        - uuid: 1257e6a31f43416abc0d107e41b207b3
+          name: 'MPLS lsp Ingress State Discovery'
+          type: DEPENDENT
+          key: mpls.lsp.state.lld
+          delay: '0'
+          lifetime: 5d
           item_prototypes:
-            - uuid: 0cf6b58d0a24471ebfcea98fb132d4ae
+            - uuid: 9cb6c0a7a3904b6a94f48a70fdedd1ff
+              name: 'LSP {#LSPNAME} {#LSPALIAS} - active path'
+              type: DEPENDENT
+              key: 'mpls.lsp.actievepath[{#LSPNAME}]'
+              delay: '0'
+              history: 2w
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - string(//mpls-lsp/active-path)
+              master_item:
+                key: 'mpls.lsp[{#LSPNAME}]'
+              tags:
+                - tag: Application
+                  value: 'MPLS LSP ACTIVE PATH'
+              trigger_prototypes:
+                - uuid: bbc52960a882488787d5e826d5c32b60
+                  expression: '(last(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/mpls.lsp.actievepath[{#LSPNAME}],#1)<>last(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/mpls.lsp.actievepath[{#LSPNAME}],#2))=1 and length(last(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/mpls.lsp.actievepath[{#LSPNAME}]))>0'
+                  recovery_mode: NONE
+                  name: 'LSP - {#LSPNAME} - {#LSPALIAS} Active Path changed'
+                  opdata: 'State: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: 'LSP - {#LSPNAME} - {#LSPALIAS} State Down'
+                      expression: 'find(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/mpls.lsp.state[{#LSPNAME}],,"regexp","[Uu]p")=0'
+                - uuid: 6bd3f760595d4aca85f7137694d00a44
+                  expression: 'find(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/mpls.lsp.actievepath[{#LSPNAME}],,"regexp","GOLD")=0 and length(last(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/mpls.lsp.actievepath[{#LSPNAME}]))>0'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'find(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/mpls.lsp.actievepath[{#LSPNAME}],,"regexp","GOLD")=1'
+                  name: 'LSP - {#LSPNAME} - {#LSPALIAS} Active Path is not gold'
+                  opdata: 'State: {ITEM.LASTVALUE1}'
+                  status: DISABLED
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: 'LSP - {#LSPNAME} - {#LSPALIAS} State Down'
+                      expression: 'find(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/mpls.lsp.state[{#LSPNAME}],,"regexp","[Uu]p")=0'
+            - uuid: 0f0bcb68ed404ee8a6b37923a4391dbb
+              name: 'LSP {#LSPNAME} {#LSPALIAS} - state'
+              type: DEPENDENT
+              key: 'mpls.lsp.state[{#LSPNAME}]'
+              delay: '0'
+              history: 2w
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - string(//mpls-lsp/lsp-state)
+              master_item:
+                key: 'mpls.lsp[{#LSPNAME}]'
+              tags:
+                - tag: Application
+                  value: 'MPLS LSP STATE'
+              trigger_prototypes:
+                - uuid: 89386e70a37b476fb21774b53302f6bd
+                  expression: 'find(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/mpls.lsp.state[{#LSPNAME}],,"regexp","[Uu]p")=0'
+                  name: 'LSP - {#LSPNAME} - {#LSPALIAS} State Down'
+                  opdata: 'State: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+            - uuid: e7920aa2e2d441f6abfebee3fd8a09ea
+              name: 'LSP {#LSPNAME}'
+              type: DEPENDENT
+              key: 'mpls.lsp[{#LSPNAME}]'
+              delay: '0'
+              history: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                - type: XMLPATH
+                  parameters:
+                    - '//rsvp-session/mpls-lsp[name[text()[normalize-space()=''{#LSPNAME}'']]]'
+              master_item:
+                key: 'mpls_rsvp_state_and_stats.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-o", "elem_set"]'
+              tags:
+                - tag: Application
+                  value: 'MPLS LSP'
+            - uuid: 69ae9db5a3fb4ee99e1ce24e960ed46d
+              name: 'SNMP TRAP - MPLS LSP {#LSPNAME} Actiev Path Change'
+              type: SNMP_TRAP
+              key: 'snmptrap["(mplsLspChange|mplsLspInfoChange)\s.*{#LSPNAME}"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+              trigger_prototypes:
+                - uuid: 63f3104d43aa416e96c1a0664b923955
+                  expression: 'nodata(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/snmptrap["(mplsLspChange|mplsLspInfoChange)\s.*{#LSPNAME}"],5m)=0 and find(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/snmptrap["(mplsLspChange|mplsLspInfoChange)\s.*{#LSPNAME}"],,"regexp","mplsLspChange|mplsLspInfoChange")=1'
+                  name: 'Mpls LSP Change'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("(mplsLspInfoName|mplsLspName).*:\s\"(.*)\"","LSP: \2")} {{ITEM.LASTVALUE1}.regsub("(mplsPathInfoName|mplsPathName).*:\s\"(.*)\"","Path: \2")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: 'mpls:lsp'
+            - uuid: b7fc6f40eb574c2fb1528ef80b19089b
+              name: 'SNMP TRAP - MPLS LSP {#LSPNAME} LSP State'
+              type: SNMP_TRAP
+              key: 'snmptrap["(mplsLspInfoUp|mplsLspInfoDown|mplsLspUp|mplsLspDown)\s.*{#LSPNAME}"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+              trigger_prototypes:
+                - uuid: d0b9c6cfe74a471d8f91cc1763af5d7c
+                  expression: 'nodata(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/snmptrap["(mplsLspInfoUp|mplsLspInfoDown|mplsLspUp|mplsLspDown)\s.*{#LSPNAME}"],5m)=0 and find(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/snmptrap["(mplsLspInfoUp|mplsLspInfoDown|mplsLspUp|mplsLspDown)\s.*{#LSPNAME}"],,"regexp","mplsLspInfoDown|mplsLspDown")=1'
+                  name: 'Mpls LSP Down'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("(mplsLspInfoName|mplsLspName).*:\s\"(.*)\"","LSP: \2")} {{ITEM.LASTVALUE1}.regsub("(mplsPathInfoName|mplsPathName).*:\s\"(.*)\"","Path: \2")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: 'mpls:lsp'
+                - uuid: 7a3a5fd87d8949d0b640af542f433f60
+                  expression: 'nodata(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/snmptrap["(mplsLspInfoUp|mplsLspInfoDown|mplsLspUp|mplsLspDown)\s.*{#LSPNAME}"],5m)=0 and find(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/snmptrap["(mplsLspInfoUp|mplsLspInfoDown|mplsLspUp|mplsLspDown)\s.*{#LSPNAME}"],,"regexp","mplsLspInfoUp|mplsLspUp")=1'
+                  name: 'Mpls LSP Up'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("(mplsLspInfoName|mplsLspName).*:\s\"(.*)\"","LSP: \2")} {{ITEM.LASTVALUE1}.regsub("(mplsPathInfoName|mplsPathName).*:\s\"(.*)\"","Path: \2")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: 'mpls:lsp'
+            - uuid: 1e4eff86515f45d188f6c003cc258564
+              name: 'SNMP TRAP - MPLS LSP {#LSPNAME} Actiev Path State'
+              type: SNMP_TRAP
+              key: 'snmptrap["(mplsLspPathUp|mplsLspPathDown|mplsLspInfoPathUp|mplsLspInfoPathDown)\s.*{#LSPNAME}"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+              trigger_prototypes:
+                - uuid: 6b096a12cac14cc696fffe064380e3c6
+                  expression: 'nodata(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/snmptrap["(mplsLspPathUp|mplsLspPathDown|mplsLspInfoPathUp|mplsLspInfoPathDown)\s.*{#LSPNAME}"],5m)=0 and find(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/snmptrap["(mplsLspPathUp|mplsLspPathDown|mplsLspInfoPathUp|mplsLspInfoPathDown)\s.*{#LSPNAME}"],,"regexp","mplsLspPathDown|mplsLspInfoPathDown")=1'
+                  name: 'Mpls Path Down'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("(mplsLspInfoName|mplsLspName).*:\s\"(.*)\"","LSP: \2")} {{ITEM.LASTVALUE1}.regsub("(mplsPathInfoName|mplsPathName).*:\s\"(.*)\"","Path: \2")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: 'mpls:lsp'
+                - uuid: 0457b925281b4fe3948f3efc89aafe36
+                  expression: 'nodata(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/snmptrap["(mplsLspPathUp|mplsLspPathDown|mplsLspInfoPathUp|mplsLspInfoPathDown)\s.*{#LSPNAME}"],5m)=0 and find(/Juniper-mpls_rsvp_statistics_and_state_full_rpc/snmptrap["(mplsLspPathUp|mplsLspPathDown|mplsLspInfoPathUp|mplsLspInfoPathDown)\s.*{#LSPNAME}"],,"regexp","mplsLspPathUp|mplsLspInfoPathUp")=1'
+                  name: 'Mpls Path Up'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("(mplsLspInfoName|mplsLspName).*:\s\"(.*)\"","LSP: \2")} {{ITEM.LASTVALUE1}.regsub("(mplsPathInfoName|mplsPathName).*:\s\"(.*)\"","Path: \2")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: 'mpls:lsp'
+          master_item:
+            key: 'mpls_rsvp_state_and_stats.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-o", "lld_set"]'
+          lld_macro_paths:
+            - lld_macro: '{#LSPALIAS}'
+              path: $.description
+            - lld_macro: '{#LSPNAME}'
+              path: $.name
+        - uuid: 88c8db2f301444e78c0d560372873908
+          name: 'MPLS lsp Ingress Stats Discovery'
+          type: DEPENDENT
+          key: mpls.lsp_statistics.lld
+          delay: '0'
+          lifetime: 5d
+          item_prototypes:
+            - uuid: 9d082062837a4efd8b6f7ec0d814b0e0
               name: 'LSP {#LSPNAME} {#LSPALIAS} - statistics bytes'
               type: DEPENDENT
               key: 'mpls.lsp.statistics_B[{#LSPNAME}]'
@@ -89,7 +252,7 @@ zabbix_export:
               tags:
                 - tag: Application
                   value: 'MPLS LSP STATISTICS'
-            - uuid: 3cb88dda38444f14b4a812923781e606
+            - uuid: b5eaa9480e8c4f2aa707f722cc1dbae9
               name: 'LSP {#LSPNAME} {#LSPALIAS} - statistics packets'
               type: DEPENDENT
               key: 'mpls.lsp.statistics_p[{#LSPNAME}]'
@@ -109,7 +272,7 @@ zabbix_export:
               tags:
                 - tag: Application
                   value: 'MPLS LSP STATISTICS'
-            - uuid: 5347f04b8dd647099fc9b72493bec177
+            - uuid: 77bfd63d3d4e4de495fcadc2f013b3db
               name: 'LSP {#LSPNAME}'
               type: DEPENDENT
               key: 'mpls.lsp_statistics[{#LSPNAME}]'
@@ -127,20 +290,22 @@ zabbix_export:
                 - tag: Application
                   value: 'MPLS LSP'
           graph_prototypes:
-            - uuid: aafacf073e3146338763db30c65eaf16
+            - uuid: db1b67c9a8c0479da3efcc6601716c9d
               name: 'Lsp Statistics {#LSPNAME}'
               graph_items:
                 - drawtype: GRADIENT_LINE
                   color: E91E63
                   item:
-                    host: Juniper-mpls_rsvp_statistics_and_state_full_rpc_add_lld
+                    host: Juniper-mpls_rsvp_statistics_and_state_full_rpc
                     key: 'mpls.lsp.statistics_B[{#LSPNAME}]'
                 - sortorder: '1'
                   color: 4000FF
                   yaxisside: RIGHT
                   item:
-                    host: Juniper-mpls_rsvp_statistics_and_state_full_rpc_add_lld
+                    host: Juniper-mpls_rsvp_statistics_and_state_full_rpc
                     key: 'mpls.lsp.statistics_p[{#LSPNAME}]'
+          master_item:
+            key: 'mpls_rsvp_state_and_stats.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "10", "-o", "lld_set"]'
           lld_macro_paths:
             - lld_macro: '{#LSPALIAS}'
               path: $.description
@@ -148,6 +313,6 @@ zabbix_export:
               path: $.name
       macros:
         - macro: '{$JUN_RPC_KEY_PATH}'
-          value: /usr/lib/zabbix/externalscripts/rsa
+          description: /usr/lib/zabbix/externalscripts/....
         - macro: '{$JUN_RPC_SSH_USER}'
-          value: netconf
+          description: netconf
