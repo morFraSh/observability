@@ -1,0 +1,2509 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: b2ec6b780f1e42f7a21396021047e0b4
+      name: Juniper
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+    - uuid: 36bff6c29af64692839d077febfc7079
+      name: 'Templates/Network devices'
+  templates:
+    - uuid: e43a8a0754c5450f9884f921fa557129
+      template: 'Juniper General MX_ACX_EX_QFX'
+      name: 'Juniper General MX_ACX_EX_QFX'
+      description: |
+        Version: 1.6.4:0
+        External script discovery BGP4: 
+        LLD.py["-h", {HOST.CONN}, "-c", "{$SNMP_COMMUNITY}", "-mi", "{#PEERADDR}", "-m", "{#PREFXTBL}", "{#ADDRTYPE}", "{#ASNUM}"]
+        
+        
+        Built-in BGP4 discovery: discovery[{#PEERADDR}, .1.3.6.1.4.1.2636.5.1.1.2.1.1.1.11, {#PREFXTBL}, .1.3.6.1.4.1.2636.5.1.1.2.1.1.1.14, {#ADDRTYPE}, .1.3.6.1.4.1.2636.5.1.1.2.1.1.1.10, {#ASNUM}, .1.3.6.1.4.1.2636.5.1.1.2.1.1.1.13]
+      templates:
+        - name: 'SNMP TRAPS Juniper'
+        - name: 'SNMP TRAPS Juniper LLD'
+        - name: 'SNMP TRAPS STANDARD'
+        - name: 'SNMP TRAPS STANDARD L3'
+      groups:
+        - name: Juniper
+        - name: Templates
+        - name: 'Templates/Network devices'
+      items:
+        - uuid: 19c2fe7b761b415288a385d3fb6f18e8
+          name: 'Uptime Juniper'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.2636.3.1.5.0
+          key: jnxBoxInstalled
+          delay: '60'
+          history: 7d
+          trends: 90d
+          units: s
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: Check_Device
+              value: Primary_Status
+          triggers:
+            - uuid: 0d3d2f5813b44a31afc4788b01d596af
+              expression: 'last(/Juniper General MX_ACX_EX_QFX/jnxBoxInstalled)<600'
+              name: '{HOST.HOST} Has just been restarted'
+              priority: AVERAGE
+        - uuid: b0eca8bfd32c47e299846d5b2d513129
+          name: 'Juniper Environment Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},.1.3.6.1.4.1.2636.3.1.13.1.5]'
+          key: 'jnxOperatingDescr[Discovery]'
+          delay: '0;60/1-7,03:00-03:01'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          description: 'Juniper Environment Discovery'
+          tags:
+            - tag: Application
+              value: 'Device Health'
+        - uuid: add68e704fb343d19362b0d20a13b06a
+          name: 'Red Alarm State'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.2636.3.4.2.3.1.0
+          key: jnxRedAlarmState
+          delay: '30'
+          history: 7d
+          trends: 90d
+          valuemap:
+            name: 'JUNIPER-ALARM-MIB::jnx(Red|Yellow)AlarmState'
+          tags:
+            - tag: Application
+              value: 'Device Health'
+          triggers:
+            - uuid: 156690576bef4688a69677ef37b38139
+              expression: 'last(/Juniper General MX_ACX_EX_QFX/jnxRedAlarmState)<>2'
+              name: 'Red Alarm on router {HOST.HOST}'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: HIGH
+        - uuid: 8b87fbd3f8cc4fd59b8f11eee6b74207
+          name: 'Yellow Alarm State'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.2636.3.4.2.2.1.0
+          key: jnxYellowAlarmState
+          delay: '60'
+          history: 7d
+          trends: 90d
+          valuemap:
+            name: 'JUNIPER-ALARM-MIB::jnx(Red|Yellow)AlarmState'
+          tags:
+            - tag: Application
+              value: 'Device Health'
+          triggers:
+            - uuid: df4371d862e14b5783b7389ba96e25e3
+              expression: 'last(/Juniper General MX_ACX_EX_QFX/jnxYellowAlarmState)<>2'
+              name: 'Yellow Alarm on router {HOST.HOST}'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: AVERAGE
+        - uuid: 2994952768c4475ea99827ec7e9e19d6
+          name: 'Network Interfaces Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},IF-MIB::ifDescr,{#IFALIAS},1.3.6.1.2.1.31.1.1.1.18,{#IFOPERSTATUS},1.3.6.1.2.1.2.2.1.8,{#IFTYPE},1.3.6.1.2.1.2.2.1.3]'
+          key: juniper.all.interfaces
+          delay: '0;60/1-7,05:00-05:01'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          tags:
+            - tag: Application
+              value: Interfaces
+        - uuid: 2c3fd72180d748b983cebacb46cd9449
+          name: 'Policer arp counter'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2636.3.5.1.1.4.23.95.95.100.101.102.97.117.108.116.95.97.114.112.95.112.111.108.105.99.101.114.95.95.23.95.95.100.101.102.97.117.108.116.95.97.114.112.95.112.111.108.105.99.101.114.95.95
+          key: policer.__default_arp_policer__
+          delay: 15m
+          history: 7d
+          trends: 30d
+          units: packet
+          tags:
+            - tag: ARP
+              value: Counter
+            - tag: Check_Device
+              value: Primary_Status
+          triggers:
+            - uuid: 09c3fe59957145c3a7c3cc23433d6653
+              expression: 'last(/Juniper General MX_ACX_EX_QFX/policer.__default_arp_policer__)>1000'
+              name: 'ARP Policer - Drop arp packet > 1000 packets'
+              opdata: 'Count: {ITEM.LASTVALUE1}'
+              priority: HIGH
+              manual_close: 'YES'
+        - uuid: 1f5e8702de1e4f30a49c726feccdaa92
+          name: 'Policer arp counter per sec'
+          type: DEPENDENT
+          key: policer.__default_arp_policer__per_sec
+          delay: '0'
+          history: 7d
+          trends: 30d
+          value_type: FLOAT
+          units: packet
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+          master_item:
+            key: policer.__default_arp_policer__
+          tags:
+            - tag: ARP
+              value: Counter_PerSec
+            - tag: Check_Device
+              value: Primary_Status
+          triggers:
+            - uuid: ab591d45c1db47b3b23c38de5f9fb08c
+              expression: 'last(/Juniper General MX_ACX_EX_QFX/policer.__default_arp_policer__per_sec)>2 or last(/Juniper General MX_ACX_EX_QFX/policer.__default_arp_policer__per_sec)=2'
+              name: 'ARP Policer - High drop rate'
+              opdata: 'Count: {ITEM.LASTVALUE1}'
+              priority: AVERAGE
+              manual_close: 'YES'
+        - uuid: 094a06730308488d8881f644a2c6c385
+          name: 'SNMP traps (fallback)'
+          type: SNMP_TRAP
+          key: snmptrap.fallback
+          delay: '0'
+          history: 1w
+          trends: '0'
+          value_type: LOG
+          description: 'Item is used to collect all SNMP traps unmatched by other snmptrap items'
+          logtimefmt: 'hh:mm:sszyyyy/MM/dd'
+          tags:
+            - tag: Application
+              value: General
+          triggers:
+            - uuid: 3bb9b64e644f4edaa3d0fcc387bf7cc9
+              expression: 'nodata(/Juniper General MX_ACX_EX_QFX/snmptrap.fallback,7m)=0'
+              name: 'SNMP Unknown'
+              opdata: '{{ITEM.LASTVALUE1}.regsub("snmpTrapOID\.0.*OID\:(.*)","Trap Mib: \1")} {{ITEM.LASTVALUE1}.regsub("ifIndex.*\:\s(.*)","\1")}'
+              tags:
+                - tag: trap
+                  value: unknown
+        - uuid: a8fd11059bc2424f93a73385a40a3f89
+          name: 'Serial number'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2636.3.1.3.0
+          key: system.hw.serialnumber
+          delay: 1h
+          history: 2w
+          trends: '0'
+          value_type: CHAR
+          description: 'A text string containing the serial number of this device.'
+          inventory_link: SERIALNO_A
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: Inventory
+        - uuid: ccaf0a2779f54bf7b37185887eeead39
+          name: 'Sys App Version'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.54.1.1.1.1.4.2
+          key: system.jnx.app.version
+          delay: 2h
+          history: 2w
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: Inventory
+        - uuid: bcef98aebac144c4b35e6d42c4787502
+          name: 'Hardware model name'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2636.3.1.2.0
+          key: system.jnx.hw.model
+          delay: 2h
+          history: 2w
+          trends: '0'
+          value_type: TEXT
+          description: |
+            MIB: SNMPv2-MIB
+            A textual description of the entity.  This value should
+            include the full name and version identification of the system's hardware type, software operating-system, and
+            networking software.
+          inventory_link: MODEL
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: Inventory
+        - uuid: cdf6382fcd804cb59352af98f4406b40
+          name: 'OS Name'
+          type: DEPENDENT
+          key: system.jnx.os.name
+          delay: '0'
+          history: 2w
+          trends: '0'
+          value_type: TEXT
+          inventory_link: OS
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - '^(.*?)\s'
+                - \1
+          master_item:
+            key: system.jnx.app.version
+          tags:
+            - tag: Application
+              value: Inventory
+        - uuid: 635d004357b3425daa67e7c1ac7bbe78
+          name: 'OS Version'
+          type: DEPENDENT
+          key: system.jnx.os.version
+          delay: '0'
+          history: 2w
+          trends: '0'
+          value_type: TEXT
+          inventory_link: SOFTWARE
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - '^.*\[(.*)\]'
+                - \1
+          master_item:
+            key: system.jnx.app.version
+          tags:
+            - tag: Application
+              value: Inventory
+        - uuid: f12d745149e64efebabc6d2d9a16d546
+          name: 'Mac address'
+          type: SNMP_AGENT
+          snmp_oid: 1.0.8802.1.1.2.1.3.2.0
+          key: system.macaddress
+          delay: 1d
+          history: 2w
+          trends: '0'
+          value_type: CHAR
+          description: 'mac address'
+          inventory_link: MACADDRESS_A
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: Inventory
+        - uuid: 9b7a545cf22c483eb762a422cf2554de
+          name: 'Device name'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.5.0
+          key: system.name
+          delay: 1h
+          history: 2w
+          trends: '0'
+          value_type: TEXT
+          description: |
+            MIB: SNMPv2-MIB
+            An administratively-assigned name for this managed node.By convention, this is the node's fully-qualified domain name.  If the name is unknown, the value is the zero-length string.
+          inventory_link: NAME
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: Inventory
+        - uuid: 15d45d7810f543e1a4ff9b075639e5df
+          name: Uptime
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.3.0
+          key: 'system.uptime[sysUpTime.0]'
+          history: 2w
+          trends: '0'
+          units: uptime
+          description: |
+            MIB: SNMPv2-MIB
+            The time (in hundredths of a second) since the network management portion of the system was last re-initialized.
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: Application
+              value: Status
+          triggers:
+            - uuid: 75f3e79fffc84f16ba83063d686a1a85
+              expression: 'last(/Juniper General MX_ACX_EX_QFX/system.uptime[sysUpTime.0])<30m'
+              name: Перезагрузился
+              priority: WARNING
+              description: 'Uptime is less than 30 minutes'
+              manual_close: 'YES'
+              dependencies:
+                - name: 'No SNMP data collection'
+                  expression: 'max(/Juniper General MX_ACX_EX_QFX/zabbix[host,snmp,available],{$SNMP.TIMEOUT})=0'
+              tags:
+                - tag: status
+                  value: reboot
+        - uuid: f13600e9bd204a57b8a5e51cd460207a
+          name: 'SNMP agent availability'
+          type: INTERNAL
+          key: 'zabbix[host,snmp,available]'
+          history: 7d
+          tags:
+            - tag: Application
+              value: Status
+          triggers:
+            - uuid: 7c4d85d52921492ba44acab634626e94
+              expression: 'max(/Juniper General MX_ACX_EX_QFX/zabbix[host,snmp,available],{$SNMP.TIMEOUT})=0'
+              name: 'No SNMP data collection'
+              opdata: 'Current state: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'SNMP is not available for polling. Please check device connectivity and SNMP settings.'
+              tags:
+                - tag: status
+                  value: unavailable
+      discovery_rules:
+        - uuid: 8974bd82a7844636bad0b5f10c14657c
+          name: 'JunOS Hardware All Status'
+          type: DEPENDENT
+          key: jnxOperatingStateOrdered
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#SNMPINDEX}'
+                value: ^1\.|^1\.|^10\.|^110\.|^20\.|^120\.
+                operator: NOT_MATCHES_REGEX
+                formulaid: A
+          lifetime: 5d
+          item_prototypes:
+            - uuid: 6562433b2b994ab79e98522aa76bf42d
+              name: '{#SNMPVALUE} - Status'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.16.{#SNMPINDEX}'
+              key: 'jnxAllStatus.[{#SNMPINDEX}]'
+              delay: 3m
+              history: 60d
+              trends: '0'
+              valuemap:
+                name: 'JUNIPER-MIB::jnxOperatingStateOrdered'
+              tags:
+                - tag: Check_Device
+                  value: Jun_System_Status
+              trigger_prototypes:
+                - uuid: b0ee5b6374554589b0e68bb927650373
+                  expression: 'last(/Juniper General MX_ACX_EX_QFX/jnxAllStatus.[{#SNMPINDEX}])<>1 and last(/Juniper General MX_ACX_EX_QFX/jnxAllStatus.[{#SNMPINDEX}])<>2'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Juniper General MX_ACX_EX_QFX/jnxAllStatus.[{#SNMPINDEX}])=1 or last(/Juniper General MX_ACX_EX_QFX/jnxAllStatus.[{#SNMPINDEX}])=2'
+                  name: '{#SNMPVALUE} - State Not Normal'
+                  opdata: 'Status: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+          master_item:
+            key: 'jnxOperatingDescr[Discovery]'
+        - uuid: 5032558384404a57b2b381ea168e3b1e
+          name: 'JunOS Hardware AFEB'
+          type: DEPENDENT
+          key: jnxRedundancyL1IndexAFEB
+          delay: '0'
+          filter:
+            evaltype: AND
+            conditions:
+              - macro: '{#SNMPINDEX}'
+                value: ^6\.1\.0\.0
+                operator: NOT_MATCHES_REGEX
+                formulaid: A
+              - macro: '{#SNMPINDEX}'
+                value: ^6\.|^106\.
+                formulaid: B
+          lifetime: 5d
+          item_prototypes:
+            - uuid: c62ebc9870ac487f851e50dc6dc32976
+              name: '{#SNMPVALUE} - Temperature'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.7.{#SNMPINDEX}'
+              key: 'jnxAFEBTemp.[{#SNMPINDEX}]'
+              delay: 5m
+              history: 60d
+              trends: 120d
+              units: °C
+              tags:
+                - tag: Check_Device
+                  value: Jun_FPC
+                - tag: HDW_LIne_Card
+                  value: '{#SNMPVALUE}'
+              trigger_prototypes:
+                - uuid: a637055f2cb94328949658761292c747
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxAFEBTemp.[{#SNMPINDEX}],#1)>{$TEMP_FPC_CRIT:"{#SNMPVALUE}"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxAFEBTemp.[{#SNMPINDEX}],#2)<({$TEMP_FPC_CRIT:"{#SNMPVALUE}"}-3)'
+                  name: '{#SNMPVALUE} - Temp over {$TEMP_FPC_CRIT:"{#SNMPVALUE}"}'
+                  opdata: 'Temp: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+                - uuid: f71b7607f4054015b5018d63a603f6f2
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxAFEBTemp.[{#SNMPINDEX}],#2)>{$TEMP_FPC_WARN:"{#SNMPVALUE}"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxAFEBTemp.[{#SNMPINDEX}],#2)<({$TEMP_FPC_WARN:"{#SNMPVALUE}"}-3)'
+                  name: '{#SNMPVALUE} - Temp over {$TEMP_FPC_WARN:"{#SNMPVALUE}"}'
+                  opdata: 'Temp: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{#SNMPVALUE} - Temp over {$TEMP_FPC_CRIT:"{#SNMPVALUE}"}'
+                      expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxAFEBTemp.[{#SNMPINDEX}],#1)>{$TEMP_FPC_CRIT:"{#SNMPVALUE}"}'
+                      recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxAFEBTemp.[{#SNMPINDEX}],#2)<({$TEMP_FPC_CRIT:"{#SNMPVALUE}"}-3)'
+          graph_prototypes:
+            - uuid: 7f940ffc108b49e192cb6a19218e0f13
+              name: 'Temperature AFEB - {#SNMPVALUE}'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: E53935
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxAFEBTemp.[{#SNMPINDEX}]'
+          master_item:
+            key: 'jnxOperatingDescr[Discovery]'
+        - uuid: 83f00cd296b84027bbe9cbb49b99cfa8
+          name: 'JunOS Hardware FAN'
+          type: DEPENDENT
+          key: jnxRedundancyL1IndexFAN
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#SNMPINDEX}'
+                value: ^4\.|^104\.
+                formulaid: A
+          lifetime: 5d
+          item_prototypes:
+            - uuid: e92e1a42ede14a0f914de72c4e300ecf
+              name: 'SNMP TRAP - {#SNMPVALUE}'
+              type: SNMP_TRAP
+              key: 'snmptrap[(jnxFanFailure|jnxFanOK)((.|\n)*)jnxOperatingState\.{#SNMPINDEX}]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+              trigger_prototypes:
+                - uuid: 76f5d41937384923844a022611a62fc3
+                  expression: 'nodata(/Juniper General MX_ACX_EX_QFX/snmptrap[(jnxFanFailure|jnxFanOK)((.|\n)*)jnxOperatingState\.{#SNMPINDEX}],7m)=0 and find(/Juniper General MX_ACX_EX_QFX/snmptrap[(jnxFanFailure|jnxFanOK)((.|\n)*)jnxOperatingState\.{#SNMPINDEX}],,"regexp","jnxFanFailure")=1'
+                  name: '{#SNMPVALUE} - FAN Failure'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxOperatingState\.{#SNMPINDEX}.*:(.*)","\1")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: fan
+                - uuid: 8a726685331d4a6596ccd891536698e1
+                  expression: 'nodata(/Juniper General MX_ACX_EX_QFX/snmptrap[(jnxFanFailure|jnxFanOK)((.|\n)*)jnxOperatingState\.{#SNMPINDEX}],7m)=0 and find(/Juniper General MX_ACX_EX_QFX/snmptrap[(jnxFanFailure|jnxFanOK)((.|\n)*)jnxOperatingState\.{#SNMPINDEX}],,"regexp","jnxFanOK")=1'
+                  name: '{#SNMPVALUE} - FAN OK'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxOperatingState\.{#SNMPINDEX}.*:(.*)","\1")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: fan
+          master_item:
+            key: 'jnxOperatingDescr[Discovery]'
+        - uuid: 3bec95f2360243b29d52876a91f6821f
+          name: 'JunOS Hardware FPC'
+          type: DEPENDENT
+          key: jnxRedundancyL1IndexFPC
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#SNMPINDEX}'
+                value: ^7\.|^107\.
+                formulaid: A
+          lifetime: 5d
+          item_prototypes:
+            - uuid: bd91cfb2fd264afea7591c7cd19be8d7
+              name: '{#SNMPVALUE} - Memory (Buffer)'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.11.{#SNMPINDEX}'
+              key: 'jnxFPCBufferUtil.[{#SNMPINDEX}]'
+              delay: 3m
+              history: 60d
+              trends: 120d
+              units: '%'
+              tags:
+                - tag: Check_Device
+                  value: Jun_FPC
+                - tag: HDW_LIne_Card
+                  value: '{#SNMPVALUE}'
+            - uuid: 21916107f10f4d4b82972d83b20de878
+              name: '{#SNMPVALUE} - CPU Usage'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.8.{#SNMPINDEX}'
+              key: 'jnxFPCCpuUtil.[{#SNMPINDEX}]'
+              delay: 2m
+              history: 60d
+              trends: 120d
+              units: '%'
+              tags:
+                - tag: Check_Device
+                  value: Jun_FPC
+                - tag: HDW_LIne_Card
+                  value: '{#SNMPVALUE}'
+              trigger_prototypes:
+                - uuid: a8c3e02aa1d346e8933ed61a60d6812d
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxFPCCpuUtil.[{#SNMPINDEX}],#2)>60'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'min(/Juniper General MX_ACX_EX_QFX/jnxFPCCpuUtil.[{#SNMPINDEX}],#2)<55'
+                  name: '{#SNMPVALUE} - CPU Usage above 60%'
+                  opdata: 'CPU: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{#SNMPVALUE} - CPU Usage above 90%'
+                      expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxFPCCpuUtil.[{#SNMPINDEX}],#2)>90'
+                      recovery_expression: 'min(/Juniper General MX_ACX_EX_QFX/jnxFPCCpuUtil.[{#SNMPINDEX}],#2)<85'
+                - uuid: 348743e464df4d72bc1c8c7244c0e680
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxFPCCpuUtil.[{#SNMPINDEX}],#2)>90'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'min(/Juniper General MX_ACX_EX_QFX/jnxFPCCpuUtil.[{#SNMPINDEX}],#2)<85'
+                  name: '{#SNMPVALUE} - CPU Usage above 90%'
+                  opdata: 'CPU: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+            - uuid: c4e45e4542a24ac9898931948b60629d
+              name: '{#SNMPVALUE} - Memory (Heap)'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.12.{#SNMPINDEX}'
+              key: 'jnxFPCHeapUtil.[{#SNMPINDEX}]'
+              delay: 3m
+              history: 60d
+              trends: 120d
+              units: '%'
+              tags:
+                - tag: Check_Device
+                  value: Jun_FPC
+                - tag: HDW_LIne_Card
+                  value: '{#SNMPVALUE}'
+            - uuid: aaca5c48d44942288aef920fab12a94e
+              name: '{#SNMPVALUE} - Temperature'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.7.{#SNMPINDEX}'
+              key: 'jnxFPCTemp.[{#SNMPINDEX}]'
+              delay: 3m
+              history: 60d
+              trends: 120d
+              units: °C
+              tags:
+                - tag: Check_Device
+                  value: Jun_FPC
+                - tag: HDW_LIne_Card
+                  value: '{#SNMPVALUE}'
+              trigger_prototypes:
+                - uuid: 333182f2a9dd43b286f38b0c9cd6fe0a
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxFPCTemp.[{#SNMPINDEX}],#1)>{$TEMP_FPC_CRIT:"{#SNMPVALUE}"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxFPCTemp.[{#SNMPINDEX}],#2)<({$TEMP_FPC_CRIT:"{#SNMPVALUE}"}-3)'
+                  name: '{#SNMPVALUE} - Temp over {$TEMP_FPC_CRIT:"{#SNMPVALUE}"}'
+                  opdata: 'Temp: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+                - uuid: e08d8a46031748e980b13fd232d1f8e6
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxFPCTemp.[{#SNMPINDEX}],#2)>{$TEMP_FPC_WARN:"{#SNMPVALUE}"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxFPCTemp.[{#SNMPINDEX}],#2)<({$TEMP_FPC_WARN:"{#SNMPVALUE}"}-3)'
+                  name: '{#SNMPVALUE} - Temp over {$TEMP_FPC_WARN:"{#SNMPVALUE}"}'
+                  opdata: 'Temp: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{#SNMPVALUE} - Temp over {$TEMP_FPC_CRIT:"{#SNMPVALUE}"}'
+                      expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxFPCTemp.[{#SNMPINDEX}],#1)>{$TEMP_FPC_CRIT:"{#SNMPVALUE}"}'
+                      recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxFPCTemp.[{#SNMPINDEX}],#2)<({$TEMP_FPC_CRIT:"{#SNMPVALUE}"}-3)'
+          trigger_prototypes:
+            - uuid: dc8044008c6844a08221f08d57607d6b
+              expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxFPCBufferUtil.[{#SNMPINDEX}],#2)>{$MEM_FPC_ALARM:"{#SNMPVALUE}"} or avg(/Juniper General MX_ACX_EX_QFX/jnxFPCHeapUtil.[{#SNMPINDEX}],#2)>{$MEM_FPC_ALARM:"{#SNMPVALUE}"}'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'min(/Juniper General MX_ACX_EX_QFX/jnxFPCBufferUtil.[{#SNMPINDEX}],#2)<({$MEM_FPC_ALARM:"{#SNMPVALUE}"}-5) and min(/Juniper General MX_ACX_EX_QFX/jnxFPCHeapUtil.[{#SNMPINDEX}],#2)<({$MEM_FPC_ALARM:"{#SNMPVALUE}"}-5)'
+              name: '{#SNMPVALUE} - Memory Usage above {$MEM_FPC_ALARM:"{#SNMPVALUE}"}%'
+              opdata: 'Buffer: {ITEM.LASTVALUE1}, Heap: {ITEM.LASTVALUE2}'
+              priority: DISASTER
+              manual_close: 'YES'
+            - uuid: 08c12f08d28f4907ac563e0159c4344e
+              expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxFPCBufferUtil.[{#SNMPINDEX}],#2)>{$MEM_FPC_WARN:"{#SNMPVALUE}"} or avg(/Juniper General MX_ACX_EX_QFX/jnxFPCHeapUtil.[{#SNMPINDEX}],#2)>{$MEM_FPC_WARN:"{#SNMPVALUE}"}'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'min(/Juniper General MX_ACX_EX_QFX/jnxFPCBufferUtil.[{#SNMPINDEX}],#2)<({$MEM_FPC_WARN:"{#SNMPVALUE}"}-5) and min(/Juniper General MX_ACX_EX_QFX/jnxFPCHeapUtil.[{#SNMPINDEX}],#2)<({$MEM_FPC_WARN:"{#SNMPVALUE}"}-5)'
+              name: '{#SNMPVALUE} - Memory Usage above {$MEM_FPC_WARN:"{#SNMPVALUE}"}%'
+              opdata: 'Buffer: {ITEM.LASTVALUE1}, Heap: {ITEM.LASTVALUE2}'
+              priority: AVERAGE
+              manual_close: 'YES'
+              dependencies:
+                - name: '{#SNMPVALUE} - Memory Usage above {$MEM_FPC_ALARM:"{#SNMPVALUE}"}%'
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxFPCBufferUtil.[{#SNMPINDEX}],#2)>{$MEM_FPC_ALARM:"{#SNMPVALUE}"} or avg(/Juniper General MX_ACX_EX_QFX/jnxFPCHeapUtil.[{#SNMPINDEX}],#2)>{$MEM_FPC_ALARM:"{#SNMPVALUE}"}'
+                  recovery_expression: 'min(/Juniper General MX_ACX_EX_QFX/jnxFPCBufferUtil.[{#SNMPINDEX}],#2)<({$MEM_FPC_ALARM:"{#SNMPVALUE}"}-5) and min(/Juniper General MX_ACX_EX_QFX/jnxFPCHeapUtil.[{#SNMPINDEX}],#2)<({$MEM_FPC_ALARM:"{#SNMPVALUE}"}-5)'
+          graph_prototypes:
+            - uuid: 4d1920f22ed3497c99f3672d6987bc0c
+              name: 'Cpu Usage FPC - {#SNMPVALUE}'
+              graph_items:
+                - drawtype: FILLED_REGION
+                  color: FFEB3B
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxFPCCpuUtil.[{#SNMPINDEX}]'
+            - uuid: 9fc4ea851e214ebc91e4e5a0996a34ec
+              name: 'JunOS Health FPC - {#SNMPVALUE}'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: 199C0D
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxFPCCpuUtil.[{#SNMPINDEX}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: F7941D
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxFPCHeapUtil.[{#SNMPINDEX}]'
+                - sortorder: '2'
+                  drawtype: BOLD_LINE
+                  color: 2774A4
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxFPCBufferUtil.[{#SNMPINDEX}]'
+                - sortorder: '3'
+                  drawtype: BOLD_LINE
+                  color: F63100
+                  yaxisside: RIGHT
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxFPCTemp.[{#SNMPINDEX}]'
+            - uuid: 38bfa1ba53994c1f9cb293f18e5f282f
+              name: 'Memory Usage FPC - {#SNMPVALUE}'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: 2774A4
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxFPCBufferUtil.[{#SNMPINDEX}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: F7941D
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxFPCHeapUtil.[{#SNMPINDEX}]'
+            - uuid: ddbb4ead0ec34a85bfc8aab9f614ee67
+              name: 'Temperature FPC - {#SNMPVALUE}'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: E53935
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxFPCTemp.[{#SNMPINDEX}]'
+          master_item:
+            key: 'jnxOperatingDescr[Discovery]'
+        - uuid: a64974a7a41c4d0dbaf5033ad7702690
+          name: 'JunOS Hardware MS-MIC'
+          type: DEPENDENT
+          key: jnxRedundancyL1IndexMS-MIC
+          delay: '0'
+          filter:
+            evaltype: AND
+            conditions:
+              - macro: '{#SNMPINDEX}'
+                value: ^8\.|^108\.
+                formulaid: A
+              - macro: '{#SNMPVALUE}'
+                value: '^PIC\:\sMS\-MIC'
+                formulaid: B
+          lifetime: 5d
+          item_prototypes:
+            - uuid: 045a9f130fdd40599f1adedd75c60d6b
+              name: '{#SNMPVALUE} - CPU Usage'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.8.{#SNMPINDEX}'
+              key: 'jnxMSMICCpuUtil.[{#SNMPINDEX}]'
+              delay: 5m
+              history: 60d
+              trends: 120d
+              units: '%'
+              tags:
+                - tag: Check_Device
+                  value: Jun_MS_MIC
+                - tag: HDW_LIne_Card
+                  value: '{#SNMPVALUE}'
+              trigger_prototypes:
+                - uuid: 880e47e73ce64df3a15ab1adab3d2b75
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxMSMICCpuUtil.[{#SNMPINDEX}],#2)>75'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'min(/Juniper General MX_ACX_EX_QFX/jnxMSMICCpuUtil.[{#SNMPINDEX}],#2)<65'
+                  name: '{#SNMPVALUE} - CPU Usage above 75%'
+                  opdata: 'CPU: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{#SNMPVALUE} - CPU Usage above 90%'
+                      expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxMSMICCpuUtil.[{#SNMPINDEX}],#2)>90'
+                      recovery_expression: 'min(/Juniper General MX_ACX_EX_QFX/jnxMSMICCpuUtil.[{#SNMPINDEX}],#2)<85'
+                - uuid: 2e4548c48a7a4775a73f6ce1450f1144
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxMSMICCpuUtil.[{#SNMPINDEX}],#2)>90'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'min(/Juniper General MX_ACX_EX_QFX/jnxMSMICCpuUtil.[{#SNMPINDEX}],#2)<85'
+                  name: '{#SNMPVALUE} - CPU Usage above 90%'
+                  opdata: 'CPU: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+            - uuid: 08898b4c30a34896926f2ea0ac8f49a2
+              name: '{#SNMPVALUE} - Memory (Heap)'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.12.{#SNMPINDEX}'
+              key: 'jnxMSMICHeapUtil.[{#SNMPINDEX}]'
+              delay: 5m
+              history: 60d
+              trends: 120d
+              units: '%'
+              tags:
+                - tag: Check_Device
+                  value: Jun_MS_MIC
+                - tag: HDW_LIne_Card
+                  value: '{#SNMPVALUE}'
+              trigger_prototypes:
+                - uuid: b321bc909475481bb7356aea7f6d925d
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxMSMICHeapUtil.[{#SNMPINDEX}],#2)>{$MEM_FPC_ALARM:"{#SNMPVALUE}"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'min(/Juniper General MX_ACX_EX_QFX/jnxMSMICHeapUtil.[{#SNMPINDEX}],#2)<({$MEM_FPC_ALARM:"{#SNMPVALUE}"}-5)'
+                  name: '{#SNMPVALUE} - Memory Usage above {$MEM_FPC_ALARM:"{#SNMPVALUE}"}%'
+                  opdata: 'Buffer: {ITEM.LASTVALUE1}, Heap: {ITEM.LASTVALUE2}'
+                  priority: DISASTER
+                  manual_close: 'YES'
+                - uuid: cbf199b759f44a9b8a81801990ac78bd
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxMSMICHeapUtil.[{#SNMPINDEX}],#2)>{$MEM_FPC_WARN:"{#SNMPVALUE}"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'min(/Juniper General MX_ACX_EX_QFX/jnxMSMICHeapUtil.[{#SNMPINDEX}],#2)<({$MEM_FPC_WARN:"{#SNMPVALUE}"}-5)'
+                  name: '{#SNMPVALUE} - Memory Usage above {$MEM_FPC_WARN:"{#SNMPVALUE}"}%'
+                  opdata: 'Buffer: {ITEM.LASTVALUE1}, Heap: {ITEM.LASTVALUE2}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{#SNMPVALUE} - Memory Usage above {$MEM_FPC_ALARM:"{#SNMPVALUE}"}%'
+                      expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxMSMICHeapUtil.[{#SNMPINDEX}],#2)>{$MEM_FPC_ALARM:"{#SNMPVALUE}"}'
+                      recovery_expression: 'min(/Juniper General MX_ACX_EX_QFX/jnxMSMICHeapUtil.[{#SNMPINDEX}],#2)<({$MEM_FPC_ALARM:"{#SNMPVALUE}"}-5)'
+          graph_prototypes:
+            - uuid: a04b9254110d48898d85a5b747c36a01
+              name: 'Cpu Usage MS-MIC - {#SNMPVALUE}'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: D81B60
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxMSMICCpuUtil.[{#SNMPINDEX}]'
+            - uuid: a4326ca3c9a0483bb8264388ae8640b3
+              name: 'Temperature MS-MIC - {#SNMPVALUE}'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: 66BB6A
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxMSMICHeapUtil.[{#SNMPINDEX}]'
+          master_item:
+            key: 'jnxOperatingDescr[Discovery]'
+        - uuid: 5d3fc8d38a9c436684688a4af0aa63e4
+          name: 'JunOS Hardware PSU'
+          type: DEPENDENT
+          key: jnxRedundancyL1IndexPSU
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#SNMPINDEX}'
+                value: ^2\.|^102\.
+                formulaid: A
+          lifetime: 5d
+          item_prototypes:
+            - uuid: fbd21bc3346148f3b880a06c2ea11930
+              name: '{#SNMPVALUE} - Temperature'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.7.{#SNMPINDEX}'
+              key: 'jnxPSUTemp.[{#SNMPINDEX}]'
+              delay: 10m
+              history: 60d
+              trends: 160d
+              units: °C
+              tags:
+                - tag: Check_Device
+                  value: Jun_PSU
+                - tag: HDW_PSU
+                  value: '{#SNMPVALUE}'
+              trigger_prototypes:
+                - uuid: 4ddd17400cb34f7389e12bbe1022c0e2
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxPSUTemp.[{#SNMPINDEX}],#1)>{$TEMP_PSU_CRIT:"{#SNMPVALUE}"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxPSUTemp.[{#SNMPINDEX}],#2)<({$TEMP_PSU_CRIT:"{#SNMPVALUE}"}-3)'
+                  name: '{#SNMPVALUE} - Temp over {$TEMP_PSU_CRIT:"{#SNMPVALUE}"}'
+                  opdata: 'Temp: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+                - uuid: 1b5049779ae1421eac34afd14cb2c217
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxPSUTemp.[{#SNMPINDEX}],#1)>{$TEMP_PSU_WARN:"{#SNMPVALUE}"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxPSUTemp.[{#SNMPINDEX}],#2)<({$TEMP_PSU_WARN:"{#SNMPVALUE}"}-3)'
+                  name: '{#SNMPVALUE} - Temp over {$TEMP_PSU_WARN:"{#SNMPVALUE}"}'
+                  opdata: 'Temp: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{#SNMPVALUE} - Temp over {$TEMP_PSU_CRIT:"{#SNMPVALUE}"}'
+                      expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxPSUTemp.[{#SNMPINDEX}],#1)>{$TEMP_PSU_CRIT:"{#SNMPVALUE}"}'
+                      recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxPSUTemp.[{#SNMPINDEX}],#2)<({$TEMP_PSU_CRIT:"{#SNMPVALUE}"}-3)'
+            - uuid: 262bb28f4c53463fbe232d9d196e35cd
+              name: 'SNMP TRAP - {#SNMPVALUE}'
+              type: SNMP_TRAP
+              key: 'snmptrap[jnxOperatingState\.{#SNMPINDEX}]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: Application
+                  value: Power
+              trigger_prototypes:
+                - uuid: 856ba8dcb2374816b38a52f2b484ccb4
+                  expression: 'find(/Juniper General MX_ACX_EX_QFX/snmptrap[jnxOperatingState\.{#SNMPINDEX}],,"regexp","jnxPowerSupplyFailure")=1 and nodata(/Juniper General MX_ACX_EX_QFX/snmptrap[jnxOperatingState\.{#SNMPINDEX}],7m)=0'
+                  name: '{#SNMPVALUE} - PSU FAILURE'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxOperatingState\.{#SNMPINDEX}.*:(.*)","\1")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: pwr
+                - uuid: 19254429f92e4437890c400c2d715be5
+                  expression: 'find(/Juniper General MX_ACX_EX_QFX/snmptrap[jnxOperatingState\.{#SNMPINDEX}],,"regexp","jnxPowerSupplyOk")=1 and nodata(/Juniper General MX_ACX_EX_QFX/snmptrap[jnxOperatingState\.{#SNMPINDEX}],7m)=0'
+                  name: '{#SNMPVALUE} - PSU OK'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxOperatingState\.{#SNMPINDEX}.*:(.*)","\1")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: pwr
+          graph_prototypes:
+            - uuid: a6fbc2846d5f42b4a54f28a54079c908
+              name: 'Temperature PSU - {#SNMPVALUE}'
+              graph_items:
+                - drawtype: FILLED_REGION
+                  color: 1A7C11
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxPSUTemp.[{#SNMPINDEX}]'
+          master_item:
+            key: 'jnxOperatingDescr[Discovery]'
+        - uuid: 33003f7b82e14231a184e86b17c896d6
+          name: 'JunOS Hardware RE'
+          type: DEPENDENT
+          key: jnxRedundancyL1IndexRE
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#SNMPINDEX}'
+                value: ^9\.|^109\.
+                formulaid: A
+          lifetime: 5d
+          item_prototypes:
+            - uuid: 4640fe5839a148d5a21aae5ea15e4824
+              name: '{#SNMPVALUE} - 5 min load avarage'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.21.{#SNMPINDEX}'
+              key: 'jnxOperating5MinLoadAvg.[{#SNMPINDEX}]'
+              delay: 5m
+              history: 60d
+              trends: 160d
+              tags:
+                - tag: Check_Device
+                  value: Jun_RE
+                - tag: HDW_RE
+                  value: '{#SNMPVALUE}'
+            - uuid: ba062676fba6414db53a6455f9fbbceb
+              name: '{#SNMPVALUE} - Memory (Buffer)'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.11.{#SNMPINDEX}'
+              key: 'jnxOperatingBuffer.[{#SNMPINDEX}]'
+              delay: 5m
+              history: 60d
+              trends: 160d
+              units: '%'
+              tags:
+                - tag: Check_Device
+                  value: Jun_RE
+                - tag: HDW_RE
+                  value: '{#SNMPVALUE}'
+              trigger_prototypes:
+                - uuid: 1014ed6320144a1d9ef6abe4cc8ac7c6
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxOperatingBuffer.[{#SNMPINDEX}],#1)>{$MEM_ALARM}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxOperatingBuffer.[{#SNMPINDEX}],#2)<({$MEM_ALARM}-5)'
+                  name: '{#SNMPVALUE} - Memory Usage above {$MEM_ALARM}%'
+                  opdata: 'Buffer: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+                - uuid: f3a552895d014ca6a6e6c87eb2849c30
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxOperatingBuffer.[{#SNMPINDEX}],#2)>{$MEM_WARN}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxOperatingBuffer.[{#SNMPINDEX}],#2)<({$MEM_WARN}-5)'
+                  name: '{#SNMPVALUE} - Memory Usage above {$MEM_WARN}%'
+                  opdata: 'Buffer: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{#SNMPVALUE} - Memory Usage above {$MEM_ALARM}%'
+                      expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxOperatingBuffer.[{#SNMPINDEX}],#1)>{$MEM_ALARM}'
+                      recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxOperatingBuffer.[{#SNMPINDEX}],#2)<({$MEM_ALARM}-5)'
+            - uuid: ac04bfc28640484ea3e3eaf6699bfde0
+              name: '{#SNMPVALUE} - CPU Usage'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.8.{#SNMPINDEX}'
+              key: 'jnxOperatingCPU.[{#SNMPINDEX}]'
+              delay: '60'
+              history: 60d
+              trends: 160d
+              units: '%'
+              tags:
+                - tag: Check_Device
+                  value: Jun_RE
+                - tag: HDW_RE
+                  value: '{#SNMPVALUE}'
+              trigger_prototypes:
+                - uuid: 728f455bd841413fa10115ce2df4a519
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxOperatingCPU.[{#SNMPINDEX}],#2)>{$JUN_CPU_RE_CRIT}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxOperatingCPU.[{#SNMPINDEX}],#2)<({$JUN_CPU_RE_CRIT}-5)'
+                  name: '{#SNMPVALUE} - CPU Usage above {$JUN_CPU_RE_CRIT}%'
+                  opdata: 'CPU: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+                - uuid: 535bb8021e174d139d5f1e96430b297c
+                  expression: 'percentile(/Juniper General MX_ACX_EX_QFX/jnxOperatingCPU.[{#SNMPINDEX}],10m,75)>{$JUN_CPU_RE_WARN}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxOperatingCPU.[{#SNMPINDEX}],#2)<({$JUN_CPU_RE_WARN}-5)'
+                  name: '{#SNMPVALUE} - CPU Usage above {$JUN_CPU_RE_WARN}%'
+                  opdata: 'CPU: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{#SNMPVALUE} - CPU Usage above {$JUN_CPU_RE_CRIT}%'
+                      expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxOperatingCPU.[{#SNMPINDEX}],#2)>{$JUN_CPU_RE_CRIT}'
+                      recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxOperatingCPU.[{#SNMPINDEX}],#2)<({$JUN_CPU_RE_CRIT}-5)'
+            - uuid: c7906df51b4b4329ba7bdc1db768a72b
+              name: '{#SNMPVALUE} - Temperature'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.3.1.13.1.7.{#SNMPINDEX}'
+              key: 'jnxOperatingTemp.[{#SNMPINDEX}]'
+              delay: 5m
+              history: 60d
+              trends: 160d
+              units: °C
+              tags:
+                - tag: Check_Device
+                  value: Jun_RE
+                - tag: HDW_RE
+                  value: '{#SNMPVALUE}'
+              trigger_prototypes:
+                - uuid: 57056f607f90425bab907b7cf0a0922b
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxOperatingTemp.[{#SNMPINDEX}],#1)>{$TEMP_CRIT:"{#SNMPVALUE}"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxOperatingTemp.[{#SNMPINDEX}],#2)<({$TEMP_CRIT:"{#SNMPVALUE}"}-3)'
+                  name: '{#SNMPVALUE} - Temp over {$TEMP_CRIT:"{#SNMPVALUE}"}'
+                  opdata: 'Temp: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+                - uuid: fda368a3bc0a4af387065523d1337719
+                  expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxOperatingTemp.[{#SNMPINDEX}],#2)>{$TEMP_WARN:"{#SNMPVALUE}"}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxOperatingTemp.[{#SNMPINDEX}],#2)<({$TEMP_WARN:"{#SNMPVALUE}"}-3)'
+                  name: '{#SNMPVALUE} - Temp over {$TEMP_WARN:"{#SNMPVALUE}"}'
+                  opdata: 'Temp: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{#SNMPVALUE} - Temp over {$TEMP_CRIT:"{#SNMPVALUE}"}'
+                      expression: 'avg(/Juniper General MX_ACX_EX_QFX/jnxOperatingTemp.[{#SNMPINDEX}],#1)>{$TEMP_CRIT:"{#SNMPVALUE}"}'
+                      recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/jnxOperatingTemp.[{#SNMPINDEX}],#2)<({$TEMP_CRIT:"{#SNMPVALUE}"}-3)'
+          graph_prototypes:
+            - uuid: f56ccd79cecb41dea2a740837ca7dc37
+              name: 'Cpu Usage RE - {#SNMPVALUE}'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: F63100
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxOperatingCPU.[{#SNMPINDEX}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: 1A7C11
+                  yaxisside: RIGHT
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxOperating5MinLoadAvg.[{#SNMPINDEX}]'
+            - uuid: 671f3f86a9d640da9fefb0bd6aaa1614
+              name: 'JunOS Health RE - {#SNMPVALUE}'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: F63100
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxOperatingCPU.[{#SNMPINDEX}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: D81B60
+                  yaxisside: RIGHT
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxOperatingTemp.[{#SNMPINDEX}]'
+                - sortorder: '2'
+                  drawtype: BOLD_LINE
+                  color: 2774A4
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxOperatingBuffer.[{#SNMPINDEX}]'
+            - uuid: d2daecebf67c45519524460dfcca42d8
+              name: 'Memory Usage RE - {#SNMPVALUE}'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: 2774A4
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxOperatingBuffer.[{#SNMPINDEX}]'
+            - uuid: 51db2addeb7e4f96b1a296f4b093391e
+              name: 'Temperature RE - {#SNMPVALUE}'
+              graph_items:
+                - drawtype: FILLED_REGION
+                  color: D81B60
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxOperatingTemp.[{#SNMPINDEX}]'
+          master_item:
+            key: 'jnxOperatingDescr[Discovery]'
+        - uuid: 3e246404be4c4a5fb90c8d58ae512913
+          name: 'JunOS Interfaces Traffic Statistic'
+          type: DEPENDENT
+          key: juniper.interfaces
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#SNMPVALUE}'
+                value: '^ge.*|^xe.*|^et.*|^ae.*|^lt.*|^ps.*|^ms.*|^ams.*|^mams.*|^irb.*|^gr.*|^ip.*'
+                formulaid: A
+          lifetime: 5d
+          item_prototypes:
+            - uuid: c5a11d6aa9a744bdaec1b5e641ec9719
+              name: '{#SNMPVALUE} - ifAdminStatus - ({#IFALIAS})'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifAdminStatus.{#SNMPINDEX}'
+              key: 'ifAdminStatus[{#SNMPVALUE}]'
+              delay: '180'
+              history: 2w
+              trends: '0'
+              valuemap:
+                name: 'SNMP interface status (ifAdminStatus)'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Status
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+              trigger_prototypes:
+                - uuid: 48fb42ca49a341f483ce6ef4cd327a2c
+                  expression: '((last(/Juniper General MX_ACX_EX_QFX/ifAdminStatus[{#SNMPVALUE}],#1)<>last(/Juniper General MX_ACX_EX_QFX/ifAdminStatus[{#SNMPVALUE}],#2))=1 and last(/Juniper General MX_ACX_EX_QFX/ifAdminStatus[{#SNMPVALUE}])=2)'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Juniper General MX_ACX_EX_QFX/ifAdminStatus[{#SNMPVALUE}])<>2'
+                  name: 'interface {#SNMPVALUE}({#IFALIAS}) admin status: {ITEM.VALUE2}'
+                  opdata: 'Status: {ITEM.LASTVALUE1}'
+                  priority: WARNING
+                  description: |
+                    Interface admin status went up to down !!!  
+                    Interface : {#SNMPVALUE}, {ITEM.VALUE1} = {ITEM.VALUE3}
+                  manual_close: 'YES'
+                  tags:
+                    - tag: port
+                      value: core
+            - uuid: 3a040488af544faabf99947e2a2a3485
+              name: '{#SNMPVALUE} - ifHCInOctets - ({#IFALIAS})'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifHCInOctets.{#SNMPINDEX}'
+              key: 'ifHCInOctets[{#SNMPVALUE}]'
+              delay: 3m
+              history: 60d
+              trends: 160d
+              units: bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_In_Octets
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+            - uuid: 1a6ac09983074a3facf5cbadea152886
+              name: '{#SNMPVALUE} - ifHCOutOctets - ({#IFALIAS})'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifHCOutOctets.{#SNMPINDEX}'
+              key: 'ifHCOutOctets[{#SNMPVALUE}]'
+              delay: 3m
+              history: 60d
+              trends: 160d
+              units: bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Out_Octets
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+            - uuid: e02dffd850874bceb379445d72c81870
+              name: '{#SNMPVALUE} - ifOperStatus - ({#IFALIAS})'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifOperStatus.{#SNMPINDEX}'
+              key: 'ifOperStatus[{#SNMPVALUE}]'
+              delay: '60'
+              history: 60d
+              trends: '0'
+              valuemap:
+                name: 'SNMP interface status (ifOperStatus)'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Status
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+              trigger_prototypes:
+                - uuid: 2efd9369ab1e42dbabaa41b8923e74bd
+                  expression: '((last(/Juniper General MX_ACX_EX_QFX/ifOperStatus[{#SNMPVALUE}],#1)<>last(/Juniper General MX_ACX_EX_QFX/ifOperStatus[{#SNMPVALUE}],#2))=1 and last(/Juniper General MX_ACX_EX_QFX/ifOperStatus[{#SNMPVALUE}])=2)'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Juniper General MX_ACX_EX_QFX/ifOperStatus[{#SNMPVALUE}])<>2'
+                  name: 'Interface {#SNMPVALUE}({#IFALIAS}) oper status: {ITEM.VALUE2}'
+                  opdata: 'Status: {ITEM.LASTVALUE2}'
+                  priority: HIGH
+                  description: |
+                    Interface status went up to down !!!  
+                    Interface : {#SNMPVALUE}, {ITEM.VALUE1} = {ITEM.VALUE3}
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: 'interface {#SNMPVALUE}({#IFALIAS}) admin status: {ITEM.VALUE2}'
+                      expression: '((last(/Juniper General MX_ACX_EX_QFX/ifAdminStatus[{#SNMPVALUE}],#1)<>last(/Juniper General MX_ACX_EX_QFX/ifAdminStatus[{#SNMPVALUE}],#2))=1 and last(/Juniper General MX_ACX_EX_QFX/ifAdminStatus[{#SNMPVALUE}])=2)'
+                      recovery_expression: 'last(/Juniper General MX_ACX_EX_QFX/ifAdminStatus[{#SNMPVALUE}])<>2'
+                  tags:
+                    - tag: port
+                      value: core
+            - uuid: 31eb0a91642e40bbb6e8635d9ab5528d
+              name: '{#SNMPVALUE} - ifHighSpeed - ({#IFALIAS})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.31.1.1.1.15.{#SNMPINDEX}'
+              key: 'net.if.speed[{#SNMPVALUE}]'
+              delay: 5m
+              history: 60d
+              trends: '0'
+              units: bps
+              description: |
+                MIB: IF-MIB
+                An estimate of the interface's current bandwidth in units of 1,000,000 bits per second. If this object reports a value of `n' then the speed of the interface is somewhere in the range of `n-500,000' to`n+499,999'.  For interfaces which do not vary in bandwidth or for those where no accurate estimation can be made, this object should contain the nominal bandwidth. For a sub-layer which has no concept of bandwidth, this object should be zero.
+              preprocessing:
+                - type: MULTIPLIER
+                  parameters:
+                    - '1000000'
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Status
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+            - uuid: d4be0ad1ce7d4aa981d96bf7e5f05183
+              name: 'Snmp Traps - LinkUp/Down - Interface {#SNMPVALUE}({#IFALIAS})'
+              type: SNMP_TRAP
+              key: 'snmptrap["(IF-MIB::linkDown|IF-MIB::linkUp)(.|\n)*ifIndex.*\:\s{#SNMPINDEX}($|\n)"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              description: 'Ловит snmp trap link up/down по интерфейсу'
+              preprocessing:
+                - type: REGEX
+                  parameters:
+                    - 'IF-MIB::(linkDown|linkUp)'
+                    - \1
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+              trigger_prototypes:
+                - uuid: 3e419542f04841b1851857a50ca0f43a
+                  expression: 'find(/Juniper General MX_ACX_EX_QFX/snmptrap["(IF-MIB::linkDown|IF-MIB::linkUp)(.|\n)*ifIndex.*\:\s{#SNMPINDEX}($|\n)"],,"like","linkDown")=1 and nodata(/Juniper General MX_ACX_EX_QFX/snmptrap["(IF-MIB::linkDown|IF-MIB::linkUp)(.|\n)*ifIndex.*\:\s{#SNMPINDEX}($|\n)"],7m)=0'
+                  name: 'Interface {#SNMPVALUE}({#IFALIAS}) - Link Down'
+                  opdata: 'Last trap: {ITEM.LASTVALUE1}'
+                  tags:
+                    - tag: trap
+                      value: up/down
+                - uuid: 69487659cc544ea7a580cb72560d8b7a
+                  expression: 'find(/Juniper General MX_ACX_EX_QFX/snmptrap["(IF-MIB::linkDown|IF-MIB::linkUp)(.|\n)*ifIndex.*\:\s{#SNMPINDEX}($|\n)"],,"like","linkUp")=1 and nodata(/Juniper General MX_ACX_EX_QFX/snmptrap["(IF-MIB::linkDown|IF-MIB::linkUp)(.|\n)*ifIndex.*\:\s{#SNMPINDEX}($|\n)"],7m)=0'
+                  name: 'Interface {#SNMPVALUE}({#IFALIAS}) - Link Up'
+                  opdata: 'Last trap: {ITEM.LASTVALUE1}'
+                  tags:
+                    - tag: trap
+                      value: up/down
+          trigger_prototypes:
+            - uuid: aee4a4c2ec6f45bca38ffaaf8032478f
+              expression: |
+                (avg(/Juniper General MX_ACX_EX_QFX/ifHCInOctets[{#SNMPVALUE}],15m)>({$IF.UTIL.MAX:"{#SNMPVALUE}"}/100)*last(/Juniper General MX_ACX_EX_QFX/net.if.speed[{#SNMPVALUE}]) or
+                avg(/Juniper General MX_ACX_EX_QFX/ifHCOutOctets[{#SNMPVALUE}],15m)>({$IF.UTIL.MAX:"{#SNMPVALUE}"}/100)*last(/Juniper General MX_ACX_EX_QFX/net.if.speed[{#SNMPVALUE}])) and last(/Juniper General MX_ACX_EX_QFX/net.if.speed[{#SNMPVALUE}])>0
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'avg(/Juniper General MX_ACX_EX_QFX/ifHCInOctets[{#SNMPVALUE}],15m)<(({$IF.UTIL.MAX:"{#SNMPVALUE}"}-3)/100)*last(/Juniper General MX_ACX_EX_QFX/net.if.speed[{#SNMPVALUE}]) and avg(/Juniper General MX_ACX_EX_QFX/ifHCOutOctets[{#SNMPVALUE}],15m)<(({$IF.UTIL.MAX:"{#SNMPVALUE}"}-3)/100)*last(/Juniper General MX_ACX_EX_QFX/net.if.speed[{#SNMPVALUE}])'
+              name: 'Interface: {#SNMPVALUE}({#IFALIAS}): High bandwidth usage ( > {$IF.UTIL.MAX:"{#SNMPVALUE}"}% )'
+              opdata: 'In: {ITEM.LASTVALUE1}, out: {ITEM.LASTVALUE3}, speed: {ITEM.LASTVALUE2}'
+              priority: AVERAGE
+              description: 'The network interface utilization is close to its estimated maximum bandwidth.'
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Interface {#SNMPVALUE}({#IFALIAS}) oper status: {ITEM.VALUE2}'
+                  expression: '((last(/Juniper General MX_ACX_EX_QFX/ifOperStatus[{#SNMPVALUE}],#1)<>last(/Juniper General MX_ACX_EX_QFX/ifOperStatus[{#SNMPVALUE}],#2))=1 and last(/Juniper General MX_ACX_EX_QFX/ifOperStatus[{#SNMPVALUE}])=2)'
+                  recovery_expression: 'last(/Juniper General MX_ACX_EX_QFX/ifOperStatus[{#SNMPVALUE}])<>2'
+              tags:
+                - tag: port
+                  value: bndw
+          graph_prototypes:
+            - uuid: 0af2890c517340108a9c4177a5b06c7e
+              name: 'Interface {#SNMPVALUE} - {#IFALIAS}'
+              percent_right: '95'
+              graph_items:
+                - drawtype: FILLED_REGION
+                  color: 2618B1
+                  yaxisside: RIGHT
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'ifHCInOctets[{#SNMPVALUE}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: FFC600
+                  yaxisside: RIGHT
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'ifHCOutOctets[{#SNMPVALUE}]'
+          master_item:
+            key: juniper.all.interfaces
+        - uuid: 36a0065ec96a4d16b8154a7db851fd9d
+          name: 'JunOS Interfaces BUM'
+          type: DEPENDENT
+          key: juniper.interfaces.bum
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#SNMPVALUE}'
+                value: '{$PHY_INT_BUM_MATCHES}'
+                formulaid: A
+          lifetime: 1d
+          description: 'Only physical interfaces'
+          item_prototypes:
+            - uuid: 648183191e9d48888963f2d658a0e903
+              name: 'Interface {#SNMPVALUE}({#IFALIAS}): Bcast packets received'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifHCInBroadcastPkts.{#SNMPINDEX}'
+              key: 'ifHCInBroadcastPkts.[{#SNMPVALUE}]'
+              delay: '90'
+              history: 7d
+              trends: 90d
+              units: pps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_In_BUM
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+            - uuid: 53a6d14b5ad641c58d5856f27819b4bf
+              name: 'Interface {#SNMPVALUE}({#IFALIAS}): Mcast packets received'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifHCInMulticastPkts.{#SNMPINDEX}'
+              key: 'ifHCInMulticastPkts.[{#SNMPVALUE}]'
+              delay: '90'
+              history: 7d
+              trends: 90d
+              units: pps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_In_BUM
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+            - uuid: 7a7cbaa17d1c4e8c9f4a8068d8a9899e
+              name: 'Interface {#SNMPVALUE}({#IFALIAS}): Bcast packets sent'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifHCOutBroadcastPkts.{#SNMPINDEX}'
+              key: 'ifHCOutBroadcastPkts.[{#SNMPVALUE}]'
+              delay: '90'
+              history: 7d
+              trends: 90d
+              units: pps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Out_BUM
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+            - uuid: fc2dafa225d3474d8254b2e0b9a76324
+              name: 'Interface {#SNMPVALUE}({#IFALIAS}): Mcast packets sent'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifHCOutMulticastPkts.{#SNMPINDEX}'
+              key: 'ifHCOutMulticastPkts.[{#SNMPVALUE}]'
+              delay: '90'
+              history: 7d
+              trends: 90d
+              units: pps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Out_BUM
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+          graph_prototypes:
+            - uuid: e5896d06ed444101a952d8548d21f0b4
+              name: 'BUM on  {#SNMPVALUE} - ({#IFALIAS})'
+              graph_items:
+                - color: FF0000
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'ifHCOutBroadcastPkts.[{#SNMPVALUE}]'
+                - sortorder: '1'
+                  color: FDD835
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'ifHCOutMulticastPkts.[{#SNMPVALUE}]'
+                - sortorder: '2'
+                  color: 4CAF50
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'ifHCInBroadcastPkts.[{#SNMPVALUE}]'
+                - sortorder: '3'
+                  color: 00BFFF
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'ifHCInMulticastPkts.[{#SNMPVALUE}]'
+          master_item:
+            key: juniper.all.interfaces
+        - uuid: c5fe05786b2b4c1ebe1a1a7d475318dc
+          name: 'JunOS Interfaces Error and Discard'
+          type: DEPENDENT
+          key: juniper.interfaces.errors
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#SNMPVALUE}'
+                value: '{$PHY_INT_ERROR_MATCHES}'
+                formulaid: A
+          lifetime: 1d
+          description: 'Only physical interfaces'
+          item_prototypes:
+            - uuid: acc78bca63e148a99d683212da91b620
+              name: '{#SNMPVALUE} - ifInDiscardsFull - ({#IFALIAS})'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifInDiscards.{#SNMPINDEX}'
+              key: 'ifInDiscardsFull[{#SNMPVALUE}]'
+              delay: '180'
+              history: 7d
+              trends: 90d
+              value_type: FLOAT
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_ErrDiscard
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+            - uuid: 6d188659af2f454cbf5b74b31121debf
+              name: '{#SNMPVALUE} - ifInDiscards - ({#IFALIAS})'
+              type: DEPENDENT
+              key: 'ifInDiscards[{#SNMPVALUE}]'
+              delay: '0'
+              history: 7d
+              trends: 160d
+              value_type: FLOAT
+              units: pps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              master_item:
+                key: 'ifInDiscardsFull[{#SNMPVALUE}]'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_ErrDiscard
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+              trigger_prototypes:
+                - uuid: e7d5d4eb91a244788bdf1bfdc82dab6b
+                  expression: 'last(/Juniper General MX_ACX_EX_QFX/ifInDiscards[{#SNMPVALUE}])>{$IF.HIGH.IN.PPS.DROP:"{#SNMPVALUE}"}'
+                  name: 'Interface {#SNMPVALUE}({#IFALIAS}) : High In droped rate'
+                  opdata: 'Rate out: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+                  tags:
+                    - tag: errors
+                      value: crit
+                    - tag: port
+                      value: core
+            - uuid: 3593f6b5dca3442cadb04cc7e6865c72
+              name: '{#SNMPVALUE} - ifInErrorsFull - ({#IFALIAS})'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifInErrors.{#SNMPINDEX}'
+              key: 'ifInErrorsFull[{#SNMPVALUE}]'
+              delay: '180'
+              history: 2d
+              trends: '0'
+              value_type: FLOAT
+              units: '!ошиб.'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Errors
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+            - uuid: 7a394c8900c1411e9c08d56652eafbe7
+              name: '{#SNMPVALUE} - ifInErrors - ({#IFALIAS})'
+              type: DEPENDENT
+              key: 'ifInErrors[{#SNMPVALUE}]'
+              delay: '0'
+              history: 60d
+              trends: 160d
+              value_type: FLOAT
+              units: pps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              master_item:
+                key: 'ifInErrorsFull[{#SNMPVALUE}]'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Errors
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+              trigger_prototypes:
+                - uuid: 1b600e21594e43b9ad7e7c3fd82015b3
+                  expression: '(last(/Juniper General MX_ACX_EX_QFX/ifInErrors[{#SNMPVALUE}],#1)<>last(/Juniper General MX_ACX_EX_QFX/ifInErrors[{#SNMPVALUE}],#2))=1 and last(/Juniper General MX_ACX_EX_QFX/ifInErrors[{#SNMPVALUE}])<>0'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'max(/Juniper General MX_ACX_EX_QFX/ifInErrors[{#SNMPVALUE}],60m)=0'
+                  name: 'Interface {#SNMPVALUE}({#IFALIAS}) : Errors have occurred'
+                  opdata: 'Rate in: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: 'Interface {#SNMPVALUE}({#IFALIAS}) : High error rate'
+                      expression: 'last(/Juniper General MX_ACX_EX_QFX/ifInErrors[{#SNMPVALUE}])>0.5'
+                  tags:
+                    - tag: errors
+                      value: crit
+                    - tag: port
+                      value: core
+                - uuid: 6031b7908a3e4232ac877789df5f531e
+                  expression: 'last(/Juniper General MX_ACX_EX_QFX/ifInErrors[{#SNMPVALUE}])>0.5'
+                  name: 'Interface {#SNMPVALUE}({#IFALIAS}) : High error rate'
+                  opdata: 'Rate in: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+                  tags:
+                    - tag: errors
+                      value: crit
+                    - tag: port
+                      value: core
+            - uuid: c486032cfef941279ef39a37a5e70055
+              name: '{#SNMPVALUE} - ifOutDiscardsFull - ({#IFALIAS})'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifOutDiscards.{#SNMPINDEX}'
+              key: 'ifOutDiscardsFull[{#SNMPVALUE}]'
+              delay: '180'
+              history: 2d
+              trends: '0'
+              value_type: FLOAT
+              units: '!pkts'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_ErrDiscard
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+            - uuid: fd771f2de6bf4c97ba1dd4804adbc92a
+              name: '{#SNMPVALUE} - ifOutDiscards - ({#IFALIAS})'
+              type: DEPENDENT
+              key: 'ifOutDiscards[{#SNMPVALUE}]'
+              delay: '0'
+              history: 7d
+              trends: 160d
+              value_type: FLOAT
+              units: pps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              master_item:
+                key: 'ifOutDiscardsFull[{#SNMPVALUE}]'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_ErrDiscard
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+              trigger_prototypes:
+                - uuid: 1e3cc757d05e41858afbd5524b0c6112
+                  expression: 'last(/Juniper General MX_ACX_EX_QFX/ifOutDiscards[{#SNMPVALUE}])>{$IF.HIGH.PPS.DROP:"{#SNMPVALUE}"}'
+                  name: 'Interface {#SNMPVALUE}({#IFALIAS}) : High out droped rate'
+                  opdata: 'Rate out: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+                  manual_close: 'YES'
+                  tags:
+                    - tag: errors
+                      value: crit
+                    - tag: port
+                      value: core
+          graph_prototypes:
+            - uuid: 9c07011f69aa4ab39707489ae9e300cb
+              name: 'Discard {#SNMPVALUE} - {#IFALIAS}'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: 199C0D
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'ifInDiscards[{#SNMPVALUE}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: F63100
+                  calc_fnc: ALL
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'ifOutDiscards[{#SNMPVALUE}]'
+            - uuid: 6c34a8740a0142b6b474a31c825ab150
+              name: 'Errors {#SNMPVALUE} - {#IFALIAS}'
+              graph_items:
+                - drawtype: FILLED_REGION
+                  color: F44336
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'ifInErrorsFull[{#SNMPVALUE}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: BF00FF
+                  yaxisside: RIGHT
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'ifInErrors[{#SNMPVALUE}]'
+          master_item:
+            key: juniper.all.interfaces
+        - uuid: eb5cc5b88e734df6b3460871ae8d1760
+          name: 'JunOS Interfaces Ether Duplex'
+          type: DEPENDENT
+          key: juniper.interfaces.eth.duplx
+          delay: '0'
+          filter:
+            evaltype: AND
+            conditions:
+              - macro: '{#IFALIAS}'
+                value: '{$ALIAS_INT_DUPLEX_NO_MATCHES}'
+                formulaid: A
+              - macro: '{#IFOPERSTATUS}'
+                value: '1'
+                formulaid: B
+              - macro: '{#IFTYPE}'
+                value: '6'
+                formulaid: C
+              - macro: '{#SNMPVALUE}'
+                value: '{$PHY_INT_DUPLEX_MATCHES}'
+                formulaid: D
+          lifetime: '0'
+          description: 'Discovering interfaces from IF-MIB and EtherLike-MIB. Interfaces with up(1) Operational Status are discovered.'
+          item_prototypes:
+            - uuid: bf89092b03aa499b96c0a3860defba8e
+              name: '{#SNMPVALUE} - DuplexStatus - ({#IFALIAS})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.10.7.2.1.19.{#SNMPINDEX}'
+              key: 'DuplexStatus[{#SNMPVALUE}]'
+              delay: 5m
+              history: 7d
+              trends: '0'
+              description: |
+                MIB: EtherLike-MIB
+                The current mode of operation of the MAC
+                entity.  'unknown' indicates that the current
+                duplex mode could not be determined.
+                
+                Management control of the duplex mode is
+                accomplished through the MAU MIB.  When
+                an interface does not support autonegotiation,
+                or when autonegotiation is not enabled, the
+                duplex mode is controlled using
+                ifMauDefaultType.  When autonegotiation is
+                supported and enabled, duplex mode is controlled
+                using ifMauAutoNegAdvertisedBits.  In either
+                case, the currently operating duplex mode is
+                reflected both in this object and in ifMauType.
+                
+                Note that this object provides redundant
+                information with ifMauType.  Normally, redundant
+                objects are discouraged.  However, in this
+                instance, it allows a management application to
+                determine the duplex status of an interface
+                without having to know every possible value of
+                ifMauType.  This was felt to be sufficiently
+                valuable to justify the redundancy.
+                Reference: [IEEE 802.3 Std.], 30.3.1.1.32,aDuplexStatus.
+              valuemap:
+                name: 'EtherLike-MIB::dot3StatsDuplexStatus'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Status
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+              trigger_prototypes:
+                - uuid: 82d7d1d873804144972923a15f2fb21b
+                  expression: 'last(/Juniper General MX_ACX_EX_QFX/DuplexStatus[{#SNMPVALUE}])=2'
+                  name: 'Interface {#SNMPVALUE}({#IFALIAS}) duplex: half-duplex'
+                  opdata: 'Status: {ITEM.LASTVALUE1}'
+                  priority: WARNING
+                  description: 'Please check autonegotiation settings and cabling'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: port
+                      value: core
+          master_item:
+            key: juniper.all.interfaces
+        - uuid: 2dcae4709dec4cd293672850d2a65f10
+          name: 'JunOS Interfaces MS Traps'
+          type: DEPENDENT
+          key: juniper.interfaces.ms.traps
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#SNMPVALUE}'
+                value: '(^ms.*|^mams.*)\-[0-9]+\/[0-9]+\/([0-9]+$|[0-9]+\:[0-9]+$)'
+                formulaid: A
+          lifetime: 5d
+          description: 'Only physical interfaces'
+          item_prototypes:
+            - uuid: 001f1383bc4942c3bdbfcca22f8fb5af
+              name: 'SNMP TRAP - jnxSpSvcSetCpu [{#SNMPVALUE}]'
+              type: SNMP_TRAP
+              key: 'snmptrap["(jnxSpSvcSetCpuExceeded|jnxSpSvcSetCpuOk)(.|\n)*jnxSpSvcSetIfTableName\.{#SNMPINDEX}\s.*\:\s.*($|\n)"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              description: |
+                "This indicates a Service Pic has exceeded its internal threshold
+                            for CPU utilization (85%)."
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+              trigger_prototypes:
+                - uuid: 0170dacd254c4bfaa00e3d3f23bc7a10
+                  expression: 'nodata(/Juniper General MX_ACX_EX_QFX/snmptrap["(jnxSpSvcSetCpuExceeded|jnxSpSvcSetCpuOk)(.|\n)*jnxSpSvcSetIfTableName\.{#SNMPINDEX}\s.*\:\s.*($|\n)"],3m)=0 and find(/Juniper General MX_ACX_EX_QFX/snmptrap["(jnxSpSvcSetCpuExceeded|jnxSpSvcSetCpuOk)(.|\n)*jnxSpSvcSetIfTableName\.{#SNMPINDEX}\s.*\:\s.*($|\n)"],,"regexp","jnxSpSvcSetCpuExceeded")=1'
+                  name: 'Sp Svc Cpu - Exceeded'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxSpSvcSetIfCpuUtil.*Gauge32\:\s(.*)","Util: \1")} {{ITEM.LASTVALUE1}.regsub("jnxSpSvcSetIfTableName.*STRING\:\s\"(.*)\"","Int: \1")}'
+                  description: |
+                    "This indicates a Service Pic has exceeded its internal threshold
+                                for CPU utilization (85%)."
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: sp-svc-cpu
+            - uuid: ce813d13523b41e48ac3e8d0c3132c23
+              name: 'SNMP TRAP - jnxSpSvcSetZone [{#SNMPVALUE}]'
+              type: SNMP_TRAP
+              key: 'snmptrap["(jnxSpSvcSetZoneEntered|jnxSpSvcSetZoneExited)(.|\n)*jnxSpSvcSetIfTableName\.{#SNMPINDEX}\s.*\:\s.*($|\n)"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              description: |
+                "This indicates a Service PIC has entered a more severe memory-usage
+                            zone from a less severe memory usage zone.  The zone entered
+                            is identified by jnxSpSvcSetIfMemoryZone."
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+              trigger_prototypes:
+                - uuid: 9e515129afa64c4491b5fd1bc65d1aca
+                  expression: 'nodata(/Juniper General MX_ACX_EX_QFX/snmptrap["(jnxSpSvcSetZoneEntered|jnxSpSvcSetZoneExited)(.|\n)*jnxSpSvcSetIfTableName\.{#SNMPINDEX}\s.*\:\s.*($|\n)"],3m)=0 and find(/Juniper General MX_ACX_EX_QFX/snmptrap["(jnxSpSvcSetZoneEntered|jnxSpSvcSetZoneExited)(.|\n)*jnxSpSvcSetIfTableName\.{#SNMPINDEX}\s.*\:\s.*($|\n)"],,"regexp","jnxSpSvcSetZoneEntered")=1'
+                  name: 'Sp Svc Zone - Entered'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxSpSvcSetIfMemoryZone.*INTEGER\:\s(.*)","Util: \1")} {{ITEM.LASTVALUE1}.regsub("jnxSpSvcSetIfTableName.*STRING\:\s\"(.*)\"","Int: \1")}'
+                  description: |
+                    "This indicates a Service Pic has exceeded its internal threshold
+                                for CPU utilization (85%)."
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: sp-svc-mem
+          master_item:
+            key: juniper.all.interfaces
+        - uuid: 72f1736619eb4396a2221682a6fc3a21
+          name: 'JunOS Interfaces Traffic Statistic Phy PPS'
+          type: DEPENDENT
+          key: juniper.interfaces.phy.pps
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#SNMPVALUE}'
+                value: '{$PHY_INT_PPS_MATCHES}'
+                formulaid: A
+          lifetime: 5d
+          item_prototypes:
+            - uuid: 4323003f51ac49959045ab20b8572bc0
+              name: '{#SNMPVALUE} - ifIn1SecPkts - ({#IFALIAS})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2636.3.3.1.1.3.{#SNMPINDEX}'
+              key: 'ifIn1SecPkts[{#SNMPVALUE}]'
+              delay: 2m
+              history: 30d
+              trends: 160d
+              units: pps
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_In_PPS
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+            - uuid: dbda30c33acd49058a766294b7bbb35b
+              name: '{#SNMPVALUE} - ifOut1SecPkts - ({#IFALIAS})'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2636.3.3.1.1.6.{#SNMPINDEX}'
+              key: 'ifOut1SecPkts[{#SNMPVALUE}]'
+              delay: 2m
+              history: 30d
+              trends: 160d
+              units: pps
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Out_PPS
+                - tag: Net_Interface
+                  value: '{#SNMPVALUE}({#IFALIAS})'
+          master_item:
+            key: juniper.all.interfaces
+        - uuid: 9737eaaf1b9343dc8d708d4a779ce8cb
+          name: 'JunOS BGP4'
+          type: EXTERNAL
+          key: 'LLD.py["-h", {HOST.CONN}, "-c", "{$SNMP_COMMUNITY}", "-mi", "{#PEERADDR}"]'
+          delay: 2h
+          lifetime: 6h
+          description: 'default cmd: LLD.py["-h", {HOST.CONN}, "-c", "{$SNMP_COMMUNITY}", "-mi", "{#PEERADDR}", "-m", "{#PREFXTBL}", "{#ADDRTYPE}", "{#ASNUM}"]'
+          item_prototypes:
+            - uuid: a5e812e40b6644138291d72eeee46ac1
+              name: 'SNMP TRAP - BGP Peer Last Error - {#PEERADDR}'
+              type: DEPENDENT
+              key: 'bgpPeerLastError.BackwardTransition[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              valuemap:
+                name: BgpPeerError
+              preprocessing:
+                - type: REGEX
+                  parameters:
+                    - '(bgpPeerLastError|jnxBgpM2PeerLastErrorReceived).*:\s(.*\d)'
+                    - \2
+                - type: JAVASCRIPT
+                  parameters:
+                    - 'return value.split('' '').join('''');'
+                - type: HEX_TO_DECIMAL
+                  parameters:
+                    - ''
+              master_item:
+                key: 'snmptrap[(bgpBackwardTransition|jnxBgpM2BackwardTransition)((.|\n)*)gp.*PeerState\..*({#SNMPINDEXTRAP}|{#PEERADDR})]'
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+            - uuid: c610d7123ae34e25ae85429729621441
+              name: 'SNMP TRAP - BGP Peer Last Error - {#PEERADDR}'
+              type: DEPENDENT
+              key: 'bgpPeerLastError.BGPEstablished[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              valuemap:
+                name: BgpPeerError
+              preprocessing:
+                - type: REGEX
+                  parameters:
+                    - '(bgpPeerLastError|jnxBgpM2PeerLastErrorReceived).*:\s(.*\d)'
+                    - \2
+                - type: JAVASCRIPT
+                  parameters:
+                    - 'return value.split('' '').join('''');'
+                - type: HEX_TO_DECIMAL
+                  parameters:
+                    - ''
+              master_item:
+                key: 'snmptrap[(bgpEstablished|jnxBgpM2Established)((.|\n)*)gp.*PeerState\..*({#SNMPINDEXTRAP}|{#PEERADDR})]'
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+            - uuid: 9f0c25b52ff34ca7a75a4a93564402ac
+              name: 'SNMP TRAP - BGP Peer State - {#PEERADDR}'
+              type: DEPENDENT
+              key: 'bgpPeerState.BackwardTransition[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              valuemap:
+                name: BgpPeerState
+              preprocessing:
+                - type: REGEX
+                  parameters:
+                    - '(jnxBgpM2PeerState|bgpPeerState).*:(.*\d)'
+                    - \2
+              master_item:
+                key: 'snmptrap[(bgpBackwardTransition|jnxBgpM2BackwardTransition)((.|\n)*)gp.*PeerState\..*({#SNMPINDEXTRAP}|{#PEERADDR})]'
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+            - uuid: c533b91e79bd42adb5877ce3cf8630ef
+              name: 'Established time {#PEERADDR}'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.5.1.1.2.4.1.1.1.{#SNMPINDEX}'
+              key: 'jnxBgpM2PeerFsmEstablishedTime[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '300'
+              history: 30d
+              trends: 160d
+              units: uptime
+              tags:
+                - tag: BGP
+                  value: 'AS{#ASNUM}->{#ASNAME}'
+                - tag: Check_Device
+                  value: BGP_Status
+            - uuid: d83db334fbdc4efab2ee638e07cbf34b
+              name: 'Last recieved error {#PEERADDR}'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.5.1.1.2.2.1.1.1.{#SNMPINDEX}'
+              key: 'jnxBgpM2PeerLastErrorReceived[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '300'
+              history: 7d
+              trends: '0'
+              valuemap:
+                name: BgpPeerError
+              preprocessing:
+                - type: HEX_TO_DECIMAL
+                  parameters:
+                    - ''
+              tags:
+                - tag: BGP
+                  value: 'AS{#ASNUM}->{#ASNAME}'
+                - tag: Check_Device
+                  value: BGP_RX_Prefix
+            - uuid: dcf90493736848c59d36b59951260bb2
+              name: 'Last sent error {#PEERADDR}'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.5.1.1.2.2.1.1.2.{#SNMPINDEX}'
+              key: 'jnxBgpM2PeerLastErrorSent[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '300'
+              history: 7d
+              trends: '0'
+              valuemap:
+                name: BgpPeerError
+              preprocessing:
+                - type: HEX_TO_DECIMAL
+                  parameters:
+                    - ''
+              tags:
+                - tag: BGP
+                  value: 'AS{#ASNUM}->{#ASNAME}'
+                - tag: Check_Device
+                  value: BGP_TX_Prefix
+            - uuid: 0ff68197a57a44d9b2c6e2af4000a916
+              name: 'Remote AS for peer {#PEERADDR}'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.5.1.1.2.1.1.1.13.{#SNMPINDEX}'
+              key: 'jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '120'
+              history: 2w
+              trends: '0'
+              value_type: CHAR
+              tags:
+                - tag: BGP
+                  value: 'AS{#ASNUM}->{#ASNAME}'
+                - tag: Check_Device
+                  value: BGP_Status
+            - uuid: 8c924b2632da4c4ea89797a7dde21754
+              name: 'Operational status {#PEERADDR}'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.5.1.1.2.1.1.1.2.{#SNMPINDEX}'
+              key: 'jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '120'
+              history: 7d
+              trends: '0'
+              valuemap:
+                name: BgpPeerState
+              tags:
+                - tag: BGP
+                  value: 'AS{#ASNUM}->{#ASNAME}'
+                - tag: Check_Device
+                  value: BGP_Status
+            - uuid: be213abe201b495388ec87a8112b5af4
+              name: 'Administrative status {#PEERADDR}'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.5.1.1.2.1.1.1.3.{#SNMPINDEX}'
+              key: 'jnxBgpM2PeerStatus[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '300'
+              history: 7d
+              trends: '0'
+              valuemap:
+                name: BgpPeerAdminStatus
+              tags:
+                - tag: BGP
+                  value: 'AS{#ASNUM}->{#ASNAME}'
+                - tag: Check_Device
+                  value: BGP_Status
+            - uuid: 4b6d8267bb7e4f468342e8a87dbd6c4b
+              name: 'Accepted receiving prefixes {#PEERADDR}'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.5.1.1.2.6.2.1.8.{#PREFXTBL}.{{#ADDRTYPE}.regsub("(\(|^)(\d+)", "\2")}.1'
+              key: 'jnxBgpM2PrefixInPrefixesAccepted[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '120'
+              history: 30d
+              trends: 160d
+              tags:
+                - tag: BGP
+                  value: 'AS{#ASNUM}->{#ASNAME}'
+                - tag: Check_Device
+                  value: BGP_RX_Prefix
+            - uuid: 69f22782cda64deba8ba1e25d74e97b6
+              name: 'Active receiving prefixes {#PEERADDR}'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.5.1.1.2.6.2.1.11.{#PREFXTBL}.{{#ADDRTYPE}.regsub("(\(|^)(\d+)", "\2")}.1'
+              key: 'jnxBgpM2PrefixInPrefixesActive[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '120'
+              history: 30d
+              trends: 160d
+              status: DISABLED
+              tags:
+                - tag: BGP
+                  value: 'AS{#ASNUM}->{#ASNAME}'
+                - tag: Check_Device
+                  value: BGP_RX_Prefix
+            - uuid: ced5201c9f244ebc88721155e6173ec5
+              name: 'Rejected receiving prefixes {#PEERADDR}'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.5.1.1.2.6.2.1.9.{#PREFXTBL}.{{#ADDRTYPE}.regsub("(\(|^)(\d+)", "\2")}.1'
+              key: 'jnxBgpM2PrefixInPrefixesRejected[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '120'
+              history: 30d
+              trends: 160d
+              tags:
+                - tag: BGP
+                  value: 'AS{#ASNUM}->{#ASNAME}'
+                - tag: Check_Device
+                  value: BGP_RX_Prefix
+            - uuid: 64bcd6fbe91e452aa04a12e91b74b2b2
+              name: 'All receiving prefixes {#PEERADDR}'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.5.1.1.2.6.2.1.7.{#PREFXTBL}.{{#ADDRTYPE}.regsub("(\(|^)(\d+)", "\2")}.1'
+              key: 'jnxBgpM2PrefixInPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '120'
+              history: 30d
+              trends: 160d
+              tags:
+                - tag: BGP
+                  value: 'AS{#ASNUM}->{#ASNAME}'
+                - tag: Check_Device
+                  value: BGP_RX_Prefix
+            - uuid: b8e590bf068a44c98b0d0561852cffb5
+              name: 'All advertising prefixes {#PEERADDR}'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.2636.5.1.1.2.6.2.1.10.{#PREFXTBL}.{{#ADDRTYPE}.regsub("(\(|^)(\d+)", "\2")}.1'
+              key: 'jnxBgpM2PrefixOutPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+              delay: '120'
+              history: 30d
+              trends: 160d
+              tags:
+                - tag: BGP
+                  value: 'AS{#ASNUM}->{#ASNAME}'
+                - tag: Check_Device
+                  value: BGP_TX_Prefix
+            - uuid: 707bbfc68d474a3b8e04fa62396c5f96
+              name: 'SNMP TRAP - BGP Backward Transition {#PEERADDR}'
+              type: SNMP_TRAP
+              key: 'snmptrap[(bgpBackwardTransition|jnxBgpM2BackwardTransition)((.|\n)*)gp.*PeerState\..*({#SNMPINDEXTRAP}|{#PEERADDR})]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+            - uuid: 243655a94b40419dbd48401c0e2b757f
+              name: 'SNMP TRAP - BGP Established {#PEERADDR}'
+              type: SNMP_TRAP
+              key: 'snmptrap[(bgpEstablished|jnxBgpM2Established)((.|\n)*)gp.*PeerState\..*({#SNMPINDEXTRAP}|{#PEERADDR})]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+          trigger_prototypes:
+            - uuid: ebb4904692324a6fb6c7c7cc09139b74
+              expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=0 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixOutPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])<0.8*avg(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixOutPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],86400s)'
+              name: 'BGP AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR} has lost more than 20% of advertising pref.'
+              opdata: 'Adver. Pref.: {ITEM.LASTVALUE3} State: {ITEM.LASTVALUE2}'
+              priority: WARNING
+              manual_close: 'YES'
+              dependencies:
+                - name: 'BGP AS{#ASNUM}-({#ASNAME})  peer {#PEERADDR} is DOWN'
+                  expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=0 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],#3)<>6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerStatus[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=2'
+            - uuid: 566b869b6d73466981a0146304aa4b50
+              expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=1 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixOutPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])<0.8*avg(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixOutPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],86400s)'
+              name: 'BGP AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR} has lost more than 20% of advertising pref.'
+              opdata: 'Adver. Pref.: {ITEM.LASTVALUE3} State: {ITEM.LASTVALUE2}'
+              priority: AVERAGE
+              manual_close: 'YES'
+              dependencies:
+                - name: 'BGP AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR} is DOWN'
+                  expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=1 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],#3)<>6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerStatus[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=2'
+            - uuid: 0cba4d79c7d24758b2583eef23933f44
+              expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=0 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixInPrefixesAccepted[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])<0.8*avg(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixInPrefixesAccepted[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],86400s)'
+              name: 'BGP AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR} has lost more than 20% of receiving pref.'
+              opdata: 'Accept. Pref.: {ITEM.LASTVALUE3} State: {ITEM.LASTVALUE2}'
+              priority: WARNING
+              manual_close: 'YES'
+              dependencies:
+                - name: 'BGP AS{#ASNUM}-({#ASNAME})  peer {#PEERADDR} is DOWN'
+                  expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=0 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],#3)<>6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerStatus[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=2'
+            - uuid: 839176a5df1a4dd2ac7b08102529250f
+              expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=1 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixInPrefixesAccepted[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])<0.8*avg(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixInPrefixesAccepted[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],86400s)'
+              name: 'BGP AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR} has lost more than 20% of receiving pref.'
+              opdata: 'Accept. Pref.: {ITEM.LASTVALUE3} State: {ITEM.LASTVALUE2}'
+              priority: AVERAGE
+              manual_close: 'YES'
+              dependencies:
+                - name: 'BGP AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR} is DOWN'
+                  expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=1 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],#3)<>6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerStatus[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=2'
+            - uuid: 3f557582ac3747c38290fdb273f7b152
+              expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=0 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],#3)<>6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerStatus[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=2'
+              name: 'BGP AS{#ASNUM}-({#ASNAME})  peer {#PEERADDR} is DOWN'
+              opdata: 'State: {ITEM.LASTVALUE2} AdmState: {ITEM.LASTVALUE3}'
+              priority: AVERAGE
+              description: 'Trigger for peer that has a remote AS not matching {$BGP_PEER_AS} macro.'
+              manual_close: 'YES'
+            - uuid: 2b61cb2ce7e4434297c7fda1dd535cb1
+              expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=1 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],#3)<>6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerStatus[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=2'
+              name: 'BGP AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR} is DOWN'
+              opdata: 'State: {ITEM.LASTVALUE2} AdmState: {ITEM.LASTVALUE3}'
+              priority: HIGH
+              description: 'Trigger for peer that has a remote AS matching {$BGP_PEER_AS} macro.'
+              manual_close: 'YES'
+            - uuid: 59c951d57a954c9783fbabbfe0af687d
+              expression: 'nodata(/Juniper General MX_ACX_EX_QFX/snmptrap[(bgpBackwardTransition|jnxBgpM2BackwardTransition)((.|\n)*)gp.*PeerState\..*({#SNMPINDEXTRAP}|{#PEERADDR})],7m)=0 or nodata(/Juniper General MX_ACX_EX_QFX/bgpPeerState.BackwardTransition[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],7m)=0 or nodata(/Juniper General MX_ACX_EX_QFX/bgpPeerLastError.BackwardTransition[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],7m)=0'
+              name: 'BGP Backward Transition for AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR}'
+              opdata: 'Peer state: {ITEM.LASTVALUE2} Last Error: {ITEM.LASTVALUE3}'
+              manual_close: 'YES'
+              tags:
+                - tag: trap
+                  value: bgp
+            - uuid: a5cdd744ea0b4ad58dcf5323a737ef42
+              expression: 'nodata(/Juniper General MX_ACX_EX_QFX/snmptrap[(bgpEstablished|jnxBgpM2Established)((.|\n)*)gp.*PeerState\..*({#SNMPINDEXTRAP}|{#PEERADDR})],7m)=0 or nodata(/Juniper General MX_ACX_EX_QFX/bgpPeerLastError.BGPEstablished[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],7m)=0'
+              name: 'BGP Established for AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR}'
+              opdata: 'Last Error: {ITEM.LASTVALUE2}'
+              manual_close: 'YES'
+              tags:
+                - tag: trap
+                  value: bgp
+            - uuid: 220db01aa6104234a8765e0341cf9f98
+              expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=0 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=6 and (last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixInPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=0 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixInPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],#2)<>0)'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixInPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])<>0'
+              name: 'No prefixes received for AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR}'
+              opdata: 'Accept. Pref.: {ITEM.LASTVALUE3} State: {ITEM.LASTVALUE2}'
+              priority: WARNING
+              description: |
+                Если точно префиксов не будет, то закрываем триггер!!!
+                А если было >0, потом 0 и это не нормально, то закрывать не надо, когда префиксы появятся оно само закроется.
+              manual_close: 'YES'
+              dependencies:
+                - name: 'BGP AS{#ASNUM}-({#ASNAME})  peer {#PEERADDR} is DOWN'
+                  expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=0 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],#3)<>6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerStatus[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=2'
+            - uuid: b362df2dee3941d09ce9a41fc820e744
+              expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=1 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=6 and (last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixInPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=0 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixInPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],#2)<>0)'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixInPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])<>0'
+              name: 'No prefixes received for AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR}'
+              opdata: 'Accept. Pref.: {ITEM.LASTVALUE3} State: {ITEM.LASTVALUE2}'
+              priority: AVERAGE
+              description: |
+                Если точно префиксов не будет, то закрываем триггер!!!
+                А если было >0, потом 0 и это не нормально, то закрывать не надо, когда префиксы появятся оно само закроется.
+              manual_close: 'YES'
+              dependencies:
+                - name: 'BGP AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR} is DOWN'
+                  expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=1 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],#3)<>6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerStatus[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=2'
+            - uuid: 1bddb1b766524c188406d49377dd6726
+              expression: 'last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixInPrefixesRejected[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])>5000 and find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=0 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=6'
+              name: 'Reject many prefix for AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR}'
+              opdata: 'Reject: {ITEM.LASTVALUE1} State: {ITEM.LASTVALUE3}'
+              priority: WARNING
+              manual_close: 'YES'
+              dependencies:
+                - name: 'BGP AS{#ASNUM}-({#ASNAME})  peer {#PEERADDR} is DOWN'
+                  expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=0 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],#3)<>6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerStatus[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=2'
+            - uuid: c6fed4213fe941abbc02b1168eafd14e
+              expression: 'last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PrefixInPrefixesRejected[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])>5000 and find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=1 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=6'
+              name: 'Reject many prefix for AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR}'
+              opdata: 'Reject: {ITEM.LASTVALUE1} State: {ITEM.LASTVALUE3}'
+              priority: AVERAGE
+              manual_close: 'YES'
+              dependencies:
+                - name: 'BGP AS{#ASNUM}-({#ASNAME}) peer {#PEERADDR} is DOWN'
+                  expression: 'find(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerRemoteAs[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],,"regexp","{$BGP_PEER_AS}")=1 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerState[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}],#3)<>6 and last(/Juniper General MX_ACX_EX_QFX/jnxBgpM2PeerStatus[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}])=2'
+          graph_prototypes:
+            - uuid: b924c812334b493591f9725a89e76e18
+              name: '№{#PREFXTBL} AS{#ASNUM}-({#ASNAME}) prefix peer {#PEERADDR}'
+              graph_items:
+                - drawtype: BOLD_LINE
+                  color: CCCC00
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxBgpM2PrefixInPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: 66FF66
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxBgpM2PrefixInPrefixesAccepted[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+                - sortorder: '2'
+                  drawtype: BOLD_LINE
+                  color: FF3333
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxBgpM2PrefixInPrefixesRejected[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+                - sortorder: '3'
+                  drawtype: BOLD_LINE
+                  color: 0000CC
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxBgpM2PrefixOutPrefixes[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+                - sortorder: '4'
+                  drawtype: FILLED_REGION
+                  color: '006600'
+                  item:
+                    host: 'Juniper General MX_ACX_EX_QFX'
+                    key: 'jnxBgpM2PrefixInPrefixesActive[{#ASNUM}, {#PEERADDR}, {#PREFXTBL}]'
+      macros:
+        - macro: '{$ALIAS_INT_DUPLEX_NO_MATCHES}'
+          value: '(.*\.nm\.(km|db)\s|\sPhy$)'
+          description: 'NO math optic int'
+        - macro: '{$IF.HIGH.IN.PPS.DROP}'
+          value: '0.5'
+          description: 'High droped rate alarm'
+        - macro: '{$IF.HIGH.PPS.DROP}'
+          value: '10.5'
+          description: 'High droped rate alarm'
+        - macro: '{$IF.PPS.MAX}'
+          value: '30'
+        - macro: '{$IF.PPS.START}'
+          value: 50K
+        - macro: '{$IF.UTIL.MAX}'
+          value: '50'
+        - macro: '{$JUN_CPU_RE_CRIT}'
+          value: '95'
+        - macro: '{$JUN_CPU_RE_WARN}'
+          value: '50'
+        - macro: '{$JUN_CPU_WARN}'
+          value: '65'
+        - macro: '{$MEM_ALARM}'
+          value: '95'
+        - macro: '{$MEM_FPC_ALARM}'
+          value: '90'
+        - macro: '{$MEM_FPC_WARN}'
+          value: '70'
+        - macro: '{$MEM_WARN}'
+          value: '75'
+        - macro: '{$PHY_INT_BUM_MATCHES}'
+          value: '(^ge.*|^xe.*|^et.*)\-[0-9]+\/[0-9]+\/([0-9]+$|[0-9]+\:[0-9]+$)|(^ae[0-9]+)$'
+        - macro: '{$PHY_INT_DUPLEX_MATCHES}'
+          value: '(^ge.*)\-[0-9]+\/[0-9]+\/([0-9]+$|[0-9]+\:[0-9]+$)'
+          description: 'search only ge interface'
+        - macro: '{$PHY_INT_ERROR_MATCHES}'
+          value: '(^ge.*|^xe.*|^et.*|^lt.*|^ms.*|^mams.*)\-[0-9]+\/[0-9]+\/([0-9]+$|[0-9]+\:[0-9]+$)|(^ae[0-9]+|^ps[0-9]+|^ams[0-9]+)$'
+        - macro: '{$PHY_INT_PPS_MATCHES}'
+          value: '^ge.*|^xe.*|^et.*|^ae.*|^lt.*|^ps.*|^ms.*|^ams.*|^mams.*|^irb.*|^gr.*|^ip.*'
+        - macro: '{$TEMP_CRIT}'
+          value: '80'
+        - macro: '{$TEMP_CRIT_LOW}'
+          value: '5'
+        - macro: '{$TEMP_FPC_CRIT}'
+          value: '80'
+        - macro: '{$TEMP_FPC_WARN}'
+          value: '60'
+        - macro: '{$TEMP_PSU_CRIT}'
+          value: '75'
+        - macro: '{$TEMP_PSU_WARN}'
+          value: '55'
+        - macro: '{$TEMP_WARN}'
+          value: '55'
+      dashboards:
+        - uuid: 2e2c9a728b644ce38316d360361a2841
+          name: 'All Interfaces'
+          pages:
+            - widgets:
+                - type: graphprototype
+                  width: '24'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: 'Juniper General MX_ACX_EX_QFX'
+                        name: 'Interface {#SNMPVALUE} - {#IFALIAS}'
+        - uuid: 741d429d5fea4dc0bccf2ddaa3204268
+          name: MX
+          pages:
+            - widgets:
+                - type: graphprototype
+                  width: '24'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: 'Juniper General MX_ACX_EX_QFX'
+                        name: 'JunOS Health RE - {#SNMPVALUE}'
+                - type: graphprototype
+                  'y': '5'
+                  width: '24'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: 'Juniper General MX_ACX_EX_QFX'
+                        name: 'Interface {#SNMPVALUE} - {#IFALIAS}'
+                - type: graphprototype
+                  'y': '10'
+                  width: '24'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: 'Juniper General MX_ACX_EX_QFX'
+                        name: '№{#PREFXTBL} AS{#ASNUM}-({#ASNAME}) prefix peer {#PEERADDR}'
+        - uuid: 811bb74e6b794ec584ee06d79e664027
+          name: PS
+          pages:
+            - widgets:
+                - type: graphprototype
+                  width: '24'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: 'Juniper General MX_ACX_EX_QFX'
+                        name: 'Temperature PSU - {#SNMPVALUE}'
+      valuemaps:
+        - uuid: 4aaaa1158a7347a0ba59df407432b5bc
+          name: BgpPeerAdminStatus
+          mappings:
+            - value: '1'
+              newvalue: stop
+            - value: '2'
+              newvalue: start
+        - uuid: 860e94ca99d34d41b49c39a7f52c6aaf
+          name: BgpPeerError
+          mappings:
+            - value: '0'
+              newvalue: None
+            - value: '256'
+              newvalue: 'Message Header Error'
+            - value: '257'
+              newvalue: 'Connection Not Synchronized'
+            - value: '258'
+              newvalue: 'Bad Message Length'
+            - value: '259'
+              newvalue: 'Bad Message Type'
+            - value: '512'
+              newvalue: 'Open Message Error'
+            - value: '513'
+              newvalue: 'Unsupported Version Number'
+            - value: '514'
+              newvalue: 'Bad Peer AS'
+            - value: '515'
+              newvalue: 'Bad BGP Identifier'
+            - value: '516'
+              newvalue: 'Unsupported Optional Parameter'
+            - value: '517'
+              newvalue: 'Authentication Failure'
+            - value: '518'
+              newvalue: 'Unacceptable Hold Time'
+            - value: '768'
+              newvalue: 'Update Message Error'
+            - value: '769'
+              newvalue: 'Malformed Attribute List'
+            - value: '770'
+              newvalue: 'Unrecognized Well-Known Attribute'
+            - value: '771'
+              newvalue: 'Missing Well-Known Attribute'
+            - value: '772'
+              newvalue: 'Attribute Flags Error'
+            - value: '773'
+              newvalue: 'Attribute Length Error'
+            - value: '774'
+              newvalue: 'Invalid Origin Attribute'
+            - value: '775'
+              newvalue: 'AS Routing Loop'
+            - value: '776'
+              newvalue: 'Invalid Next_Hop Attribute'
+            - value: '777'
+              newvalue: 'Optional Attribute Error'
+            - value: '778'
+              newvalue: 'Invalid Network Field'
+            - value: '779'
+              newvalue: 'Malformed AS_Path'
+            - value: '1024'
+              newvalue: 'Hold Timer Expired'
+            - value: '1280'
+              newvalue: 'Finite State Machine Error'
+            - value: '1281'
+              newvalue: 'Receive Unexpected Message in OpenSent State'
+            - value: '1282'
+              newvalue: 'Receive Unexpected Message in OpenConfirm State'
+            - value: '1283'
+              newvalue: 'Receive Unexpected Message in Established State'
+            - value: '1536'
+              newvalue: Cease
+            - value: '1537'
+              newvalue: 'Maximum Number of Prefixes Reached'
+            - value: '1538'
+              newvalue: 'Administrative Shutdown'
+            - value: '1539'
+              newvalue: 'Peer De-configured'
+            - value: '1540'
+              newvalue: 'Administrative Reset'
+            - value: '1541'
+              newvalue: 'Connection Rejected'
+            - value: '1542'
+              newvalue: 'Other Configuration Change'
+            - value: '1543'
+              newvalue: 'Connection Collision Resolution'
+            - value: '1544'
+              newvalue: 'Out of Resources'
+            - value: '1545'
+              newvalue: 'Hard Reset'
+        - uuid: 962494491b1540e4b11680457847bca9
+          name: BgpPeerState
+          mappings:
+            - value: '1'
+              newvalue: idle
+            - value: '2'
+              newvalue: connect
+            - value: '3'
+              newvalue: active
+            - value: '4'
+              newvalue: opensent
+            - value: '5'
+              newvalue: openconfirm
+            - value: '6'
+              newvalue: established
+        - uuid: d64d2ff78c024eb897f313dfbc8572cd
+          name: 'EtherLike-MIB::dot3StatsDuplexStatus'
+          mappings:
+            - value: '1'
+              newvalue: unknown
+            - value: '2'
+              newvalue: halfDuplex
+            - value: '3'
+              newvalue: fullDuplex
+        - uuid: 92082a300cfe4120bb548dfd3f7a78ad
+          name: 'JUNIPER-ALARM-MIB::jnx(Red|Yellow)AlarmState'
+          mappings:
+            - value: '1'
+              newvalue: other
+            - value: '2'
+              newvalue: 'off'
+            - value: '3'
+              newvalue: 'on - Alarm'
+        - uuid: 3402206ce3144b4f8b7ee77cf1303979
+          name: 'JUNIPER-MIB::jnxOperatingStateOrdered'
+          mappings:
+            - value: '1'
+              newvalue: running
+            - value: '2'
+              newvalue: standby
+            - value: '3'
+              newvalue: ready
+            - value: '4'
+              newvalue: runningAtFullSpeed
+            - value: '5'
+              newvalue: reset
+            - value: '6'
+              newvalue: down
+            - value: '7'
+              newvalue: unknown
+        - uuid: 16b28032716848aeaaf19f553a5431fc
+          name: 'SNMP interface status (ifAdminStatus)'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '3'
+              newvalue: testing
+        - uuid: 932b3b35a3ae4141b22f0dce720b8d03
+          name: 'SNMP interface status (ifOperStatus)'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '3'
+              newvalue: testing
+            - value: '4'
+              newvalue: unknown
+            - value: '5'
+              newvalue: dormant
+            - value: '6'
+              newvalue: notPresent
+            - value: '7'
+              newvalue: lowerLayerDown
+  graphs:
+    - uuid: f73620f9e71e4627a0dfdca084d64397
+      name: 'ARP POLICER'
+      ymin_type_1: FIXED
+      graph_items:
+        - drawtype: GRADIENT_LINE
+          color: 3F51B5
+          item:
+            host: 'Juniper General MX_ACX_EX_QFX'
+            key: policer.__default_arp_policer__
+        - sortorder: '1'
+          color: F63100
+          yaxisside: RIGHT
+          item:
+            host: 'Juniper General MX_ACX_EX_QFX'
+            key: policer.__default_arp_policer__per_sec
