@@ -1,0 +1,117 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: b2ec6b780f1e42f7a21396021047e0b4
+      name: Juniper
+  templates:
+    - uuid: b520ff5ab1894c03a9c969ce92cb66a1
+      template: 'Juniper Subscribers MX'
+      name: 'Juniper Subscribers MX'
+      groups:
+        - name: Juniper
+      items:
+        - uuid: 18865fd44ef84513943ae30c10a51736
+          name: 'RPC Dhcp Server Selecting'
+          type: EXTERNAL
+          key: 'dhcp-server-selecting.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "15", "-e", "RPC Dhcp Server Selecting", "-n", {HOST.HOST}, "-zn", "{$ZABAPI.USERNAME}", "-zp", "{$ZABAPI.PASSW}", "-zu", "{$ZABAPI.URL}"]'
+          delay: 30m
+          history: 1d
+          trends: '0'
+          value_type: TEXT
+          tags:
+            - tag: Application
+              value: Subscribers
+          triggers:
+            - uuid: 0c3e00ba4ca6450fa8dd82e00f04913a
+              expression: 'nodata(/Juniper Subscribers MX/dhcp-server-selecting.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "15", "-e", "RPC Dhcp Server Selecting", "-n", {HOST.HOST}, "-zn", "{$ZABAPI.USERNAME}", "-zp", "{$ZABAPI.PASSW}", "-zu", "{$ZABAPI.URL}"],5m)=0 and length(last(/Juniper Subscribers MX/dhcp-server-selecting.py["-u", {$JUN_RPC_SSH_USER}, "-k", {$JUN_RPC_KEY_PATH}, "-H", {HOST.CONN}, "-t", "15", "-e", "RPC Dhcp Server Selecting", "-n", {HOST.HOST}, "-zn", "{$ZABAPI.USERNAME}", "-zp", "{$ZABAPI.PASSW}", "-zu", "{$ZABAPI.URL}"]))>2'
+              name: 'Dhcp Status Selecting'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: WARNING
+              manual_close: 'YES'
+              tags:
+                - tag: dhcp
+                  value: selecting
+        - uuid: 4ff5b19a503d4727bd26833d0fb747f5
+          name: 'Accounting Total Subscribers'
+          type: SNMP_AGENT
+          snmp_oid: 'JUNIPER-SUBSCRIBER-MIB::jnxSubscriberAccountingTotalCount.0'
+          key: 'subs.mx[jnxSubscriberAccountingTotalCount]'
+          delay: 5m
+          history: 30d
+          units: '!sub.'
+          tags:
+            - tag: Application
+              value: Subscribers
+          triggers:
+            - uuid: 1c1f48d0ecc141dab3d7ea0afebfd94b
+              expression: '(last(/Juniper Subscribers MX/subs.mx[jnxSubscriberAccountingTotalCount])/last(/Juniper Subscribers MX/subs.mx[jnxSubscriberAccountingTotalCount],#2))<=0.9'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: '(min(/Juniper Subscribers MX/subs.mx[jnxSubscriberAccountingTotalCount],#6)/last(/Juniper Subscribers MX/subs.mx[jnxSubscriberAccountingTotalCount]))>1'
+              name: 'Subscriber Account. Total Count - lower'
+              priority: DISASTER
+              manual_close: 'YES'
+              tags:
+                - tag: subs
+                  value: acc_total
+        - uuid: 91f814fb5a644468b2be5b8eb95669ef
+          name: 'Active Subscribers'
+          type: SNMP_AGENT
+          snmp_oid: 'JUNIPER-SUBSCRIBER-MIB::jnxSubscriberActiveCount.0'
+          key: 'subs.mx[jnxSubscriberActiveCount]'
+          delay: 5m
+          history: 30d
+          trends: 180d
+          units: '!sub.'
+          tags:
+            - tag: Application
+              value: Subscribers
+        - uuid: 764c341a2a6a480f8802c2ef4d5977e8
+          name: 'Total Subscribers'
+          type: SNMP_AGENT
+          snmp_oid: 'JUNIPER-SUBSCRIBER-MIB::jnxSubscriberTotalCount.0'
+          key: 'subs.mx[jnxSubscriberTotalCount]'
+          delay: 5m
+          history: 30d
+          trends: 180d
+          units: '!sub.'
+          tags:
+            - tag: Application
+              value: Subscribers
+      macros:
+        - macro: '{$JUN_RPC_KEY_PATH}'
+          description: /usr/lib/zabbix/externalscripts/...
+        - macro: '{$JUN_RPC_SSH_USER}'
+          description: netconf
+        - macro: '{$ZABAPI.PASSW}'
+          type: SECRET_TEXT
+          description: 'password zabbix api'
+        - macro: '{$ZABAPI.URL}'
+          type: SECRET_TEXT
+          description: 'url zabbix api'
+        - macro: '{$ZABAPI.USERNAME}'
+          type: SECRET_TEXT
+          description: 'username zabbix api'
+  graphs:
+    - uuid: afcde48e97b24aa3916e3565e651550b
+      name: Subscribers
+      graph_items:
+        - drawtype: GRADIENT_LINE
+          color: 0080FF
+          calc_fnc: ALL
+          item:
+            host: 'Juniper Subscribers MX'
+            key: 'subs.mx[jnxSubscriberTotalCount]'
+        - sortorder: '1'
+          drawtype: BOLD_LINE
+          color: 00FF00
+          calc_fnc: ALL
+          item:
+            host: 'Juniper Subscribers MX'
+            key: 'subs.mx[jnxSubscriberActiveCount]'
+        - sortorder: '2'
+          drawtype: BOLD_LINE
+          color: FF0000
+          calc_fnc: ALL
+          item:
+            host: 'Juniper Subscribers MX'
+            key: 'subs.mx[jnxSubscriberAccountingTotalCount]'
