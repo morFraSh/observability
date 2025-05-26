@@ -1,0 +1,1336 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: eb5f159952274bd7b6fbeffdb278d6e4
+      name: Eco3in1
+    - uuid: 39ac5419f3b740ad9a5610ade3979bc9
+      name: ecofilter
+    - uuid: 6b591ba9567b47e78d428fc3d03b9fc1
+      name: econat
+  templates:
+    - uuid: a8c0a23aed844ee982fc4bddffc0c2b6
+      template: 'Template Econat Fair'
+      name: 'Template Econat Fair'
+      templates:
+        - name: 'Template Module ICMP Ping'
+      groups:
+        - name: econat
+      items:
+        - uuid: c32c2527fa9b431d99f6fc2129a3f4c2
+          name: 'Counts of failed tries of putting packets to both (urgent/lazy) connrings - conring is full'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.30.0
+          key: econatConnRingOverflow
+          delay: 5s
+          history: 30d
+          trends: 160d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: 1d968c6ac5584efda72d01483eed3e87
+          name: 'Free amount of memory in econat platform'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.109.0
+          key: econatCpFreeMemory
+          delay: 30s
+          history: 30d
+          trends: 160d
+        - uuid: a560fc2aeae64275817f732d81d767ef
+          name: 'Total amount of memory in econat platform'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.108.0
+          key: econatCpTotalMemory
+          delay: 30s
+          history: 30d
+          trends: 160d
+        - uuid: 51db18d8829645efac59e5912cf962ce
+          name: 'Counts of free membufs of dataplane mempool on socket 0'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.23.0
+          key: econatDispFreeMbufs0
+          delay: 30s
+          history: 30d
+          trends: 160d
+        - uuid: ba1bd3bda5ff4768a77156f709f5f4ae
+          name: 'Counts of free membufs of dataplane mempool on socket 1'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.24.0
+          key: econatDispFreeMbufs1
+          delay: 30s
+          history: 30d
+          trends: 160d
+        - uuid: 835257f62ec64269b2f6d5a44a37cc1e
+          name: 'CPU load'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.105.0
+          key: econatDpCpuBurst
+          delay: 10s
+          history: 30d
+          trends: 160d
+          triggers:
+            - uuid: 993c0acd859d4faab65ed86c6a506c08
+              expression: 'last(/Template Econat Fair/econatDpCpuBurst)>70'
+              name: 'CPU Utilization > 70%'
+              priority: AVERAGE
+              manual_close: 'YES'
+        - uuid: 4b8e1a8b337644a68fc7a48d73bb77e7
+          name: 'Free amount of memory in econat software'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.107.0
+          key: econatDpFreeMemory
+          delay: 30s
+          history: 30d
+          trends: 160d
+        - uuid: c20a8e0ce6184af58ce4d800ec6e8a6e
+          name: 'Total amount of memory in econat software'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.106.0
+          key: econatDpTotalMemory
+          delay: 30s
+          history: 30d
+          trends: 160d
+        - uuid: 25e33a5644644ea6be68d4396a1ce1f6
+          name: 'Counts of ICMP sessions'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.66.0
+          key: econatIcmpSessions
+          delay: 30s
+          history: 30d
+          trends: 160d
+        - uuid: 9a6d1a801eb946c6bacfe160e59b156e
+          name: 'Counts of creating ipv6 connections per second'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.635.0
+          key: econatIpv6EstablishedPerSec
+          delay: 2s
+          history: 30d
+          trends: 160d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: 038b2d65e6f84744b6d9bf59f157e11f
+          name: 'Counts of failed tries of allocating either block or port on egress'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.9.0
+          key: econatSessionAllocErrorEgress
+          delay: 5s
+          history: 30d
+          trends: 160d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: f60bee68d5c64a74842d2627ecaa39a8
+          name: 'Counts of failed tries of allocating either block or port on ingress'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.10.0
+          key: econatSessionAllocErrorIngress
+          delay: 5s
+          history: 30d
+          trends: 160d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: c4bbfb45e0364fd080db3db9b54d926b
+          name: 'Counts of moments when we didn''t find pool for egress packet'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.50.0
+          key: econatSessionAllocNoPoolEgress
+          delay: 5s
+          history: 30d
+          trends: 160d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: b6ed430f201f4b1f8591025adfda1b2f
+          name: 'Counts of moments when we didn''t find pool for ingress packet'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.51.0
+          key: econatSessionAllocNoPoolIngress
+          delay: 5s
+          history: 30d
+          trends: 160d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: ec5fbca495cc4354951f24162cd93731
+          name: 'Counts of failed tries of freeing sessions'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.12.0
+          key: econatSessionFreeError
+          delay: 5s
+          history: 30d
+          trends: 160d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: f68bef42ca274c88a309ac7b671c81ba
+          name: 'Counts of allocating TCP sessions'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.160.0
+          key: econatSessTcpAlloc
+          delay: 30s
+          history: 30d
+          trends: 160d
+        - uuid: 0ce644558d8c4872b3a13c3f2126b47a
+          name: 'Counts of TCP sessions'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.62.0
+          key: econatTcpSessions
+          delay: 30s
+          history: 30d
+          trends: 160d
+        - uuid: 4384f6f0c52a418886fee6d4086e7453
+          name: 'Counts of failed tries of allocating entry in translation table'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.11.0
+          key: econatTranslationAllocError
+          delay: 5s
+          history: 30d
+          trends: 160d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: 550e8cc1250f48fd8121467dc42e5bee
+          name: 'Per user connection limit was exceeded'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.712.0
+          key: econatTransPerUserLimitExceeded
+          delay: 5s
+          history: 30d
+          trends: 160d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: 30af977b0a6f416c96a93f327e1975ec
+          name: 'Counts of UDP sessions'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.64.0
+          key: econatUdpSessions
+          delay: 30s
+          history: 30d
+          trends: 160d
+        - uuid: 179eda872b14456388a62cc26f4a1565
+          name: 'SNMP traps (fallback)'
+          type: SNMP_TRAP
+          key: snmptrap.fallback
+          delay: '0'
+          history: 2w
+          value_type: LOG
+          trends: '0'
+          description: 'Item is used to collect all SNMP traps unmatched by other snmptrap items'
+          logtimefmt: 'hh:mm:sszyyyy/MM/dd'
+          tags:
+            - tag: Application
+              value: 'SNMP TRAPS'
+          triggers:
+            - uuid: b943386db44849ef94f29b5abe5d4697
+              expression: 'nodata(/Template Econat Fair/snmptrap.fallback,7m)=0'
+              name: 'SNMP Unknown'
+              opdata: '{{ITEM.LASTVALUE1}.regsub("snmpTrapOID\.0.*OID\:(.*)","Trap Mib: \1")} {{ITEM.LASTVALUE1}.regsub("ifIndex.*\:\s(.*)","\1")}'
+              manual_close: 'YES'
+              tags:
+                - tag: trap
+                  value: unknown
+        - uuid: d7af551a70484ac0be857cbfbe92e115
+          name: 'SNMP TRAP - stp'
+          type: SNMP_TRAP
+          key: 'snmptrap["(newRoot|topologyChange)"]'
+          delay: '0'
+          history: 1d
+          value_type: LOG
+          trends: '0'
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - (newRoot|topologyChange)
+                - \1
+          tags:
+            - tag: Application
+              value: 'SNMP TRAPS'
+          triggers:
+            - uuid: c4ae503ae928410787a37fb0d174c499
+              expression: 'nodata(/Template Econat Fair/snmptrap["(newRoot|topologyChange)"],5m)=0 and find(/Template Econat Fair/snmptrap["(newRoot|topologyChange)"],,"regexp","newRoot")=1'
+              name: 'STP Status - New Root'
+              opdata: 'New Root'
+              tags:
+                - tag: trap
+                  value: stp_newroot
+            - uuid: a9166e2d30f949d1b02fd1e983c14916
+              expression: 'nodata(/Template Econat Fair/snmptrap["(newRoot|topologyChange)"],5m)=0 and find(/Template Econat Fair/snmptrap["(newRoot|topologyChange)"],,"regexp","topologyChange")=1'
+              name: 'STP Status - Topology Change'
+              opdata: 'Topology Change'
+              manual_close: 'YES'
+              tags:
+                - tag: trap
+                  value: stp
+        - uuid: c6bdb93862bf46069fe74ca33a8df330
+          name: 'SNMP TRAP - authenticationFailure'
+          type: SNMP_TRAP
+          key: 'snmptrap["authenticationFailure"]'
+          delay: '0'
+          history: 1d
+          value_type: LOG
+          trends: '0'
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - authenticationFailure
+                - \0
+          tags:
+            - tag: Application
+              value: 'SNMP TRAPS'
+          triggers:
+            - uuid: b450b87b4eb04cc7a57e4eec83457277
+              expression: 'nodata(/Template Econat Fair/snmptrap["authenticationFailure"],5m)=0'
+              name: 'Auth Failure'
+              opdata: authenticationFailure
+              tags:
+                - tag: trap
+                  value: auth
+        - uuid: 8aaea21fea264ecc912ef1e8751bf529
+          name: 'SNMP TRAP - lldp'
+          type: SNMP_TRAP
+          key: 'snmptrap["LLDP-MIB::lldpRemTablesChange"]'
+          delay: '0'
+          history: 1d
+          value_type: LOG
+          trends: '0'
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - 'LLDP-MIB::(lldpRemTablesChange)'
+                - \1
+          tags:
+            - tag: Application
+              value: 'SNMP TRAPS'
+          triggers:
+            - uuid: 35babda430054c10b14f2171aa51aee3
+              expression: 'nodata(/Template Econat Fair/snmptrap["LLDP-MIB::lldpRemTablesChange"],5m)=0'
+              name: 'LLDP Tab. Change'
+              opdata: lldpRemTablesChange
+              tags:
+                - tag: trap
+                  value: lldp
+        - uuid: deb115daf55f4d52ad37c04f8b8f675b
+          name: 'SNMP TRAP - start system'
+          type: SNMP_TRAP
+          key: 'snmptrap["SNMPv2-MIB::(coldStart|warmStart)"]'
+          delay: '0'
+          history: 1d
+          value_type: LOG
+          trends: '0'
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - 'SNMPv2-MIB::(coldStart|warmStart)'
+                - \1
+          tags:
+            - tag: Application
+              value: 'SNMP TRAPS'
+          triggers:
+            - uuid: 3c5afba200fc4be9bf4064c45bdee207
+              expression: 'nodata(/Template Econat Fair/snmptrap["SNMPv2-MIB::(coldStart|warmStart)"],5m)=0 and find(/Template Econat Fair/snmptrap["SNMPv2-MIB::(coldStart|warmStart)"],,"regexp","coldStart")=1'
+              name: 'Start System - Cold Start'
+              opdata: '{ITEM.LASTVALUE1}'
+              tags:
+                - tag: trap
+                  value: start
+            - uuid: d35cebcb829641f98fb6fd36bd95db67
+              expression: 'nodata(/Template Econat Fair/snmptrap["SNMPv2-MIB::(coldStart|warmStart)"],5m)=0 and find(/Template Econat Fair/snmptrap["SNMPv2-MIB::(coldStart|warmStart)"],,"regexp","warmStart")=1'
+              name: 'Start System - Warm Start'
+              opdata: '{ITEM.LASTVALUE1}'
+              tags:
+                - tag: trap
+                  value: start
+        - uuid: effd3ea313b648ceadc9187c0d94c5c3
+          name: 'Serial number'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.45555.1.2.103.0
+          key: system.hw.serialnumber
+          delay: 1d
+          history: 2w
+          value_type: CHAR
+          trends: '0'
+          description: 'A text string containing the serial number of this device.'
+          inventory_link: SERIALNO_A
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 2d
+          tags:
+            - tag: Application
+              value: Inventory
+        - uuid: 68c3b1f30b0649d5b6fd8ba5b9b7ecab
+          name: 'Mac address'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.45555.1.2.103.0
+          key: system.macaddress
+          delay: 1d
+          history: 2w
+          value_type: CHAR
+          trends: '0'
+          description: 'mac address'
+          inventory_link: MACADDRESS_A
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 2d
+          tags:
+            - tag: Application
+              value: Inventory
+        - uuid: bdb93f2035704706a1dd2018e0acf833
+          name: Uptime
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.3.0
+          key: 'system.uptime[sysUpTime.0]'
+          delay: 30s
+          history: 2w
+          trends: '0'
+          units: uptime
+          description: |
+            MIB: SNMPv2-MIB
+            The time (in hundredths of a second) since the network management portion of the system was last re-initialized.
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: Application
+              value: Status
+          triggers:
+            - uuid: 0624cde6a3dc4e0887cad4a255a465b5
+              expression: 'last(/Template Econat Fair/system.uptime[sysUpTime.0])<10m'
+              name: 'Device Rebooted (uptime < 10m)'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'Uptime is less than 10 minutes'
+              manual_close: 'YES'
+              dependencies:
+                - name: 'No SNMP data collection'
+                  expression: 'max(/Template Econat Fair/zabbix[host,snmp,available],{$SNMP.TIMEOUT})=0'
+        - uuid: 1dfcdd56bd9f4a7cb2a851bfda4a0f92
+          name: 'Unsupported Item Check'
+          type: INTERNAL
+          key: 'zabbix[host,,items_unsupported]'
+          delay: 2h
+          history: 2d
+          trends: '0'
+          tags:
+            - tag: Application
+              value: 'Check internal'
+          triggers:
+            - uuid: 5f5d881af3c8463e8caa78efc6c6644a
+              expression: 'last(/Template Econat Fair/zabbix[host,,items_unsupported])>0'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'last(/Template Econat Fair/zabbix[host,,items_unsupported])=0'
+              name: 'Неподдерживаемые элементы: {ITEM.VALUE}'
+              opdata: '{ITEM.VALUE}'
+              priority: INFO
+              manual_close: 'YES'
+        - uuid: b2ba89c90f7848bd9f6715aaf91ebfb3
+          name: 'SNMP agent availability'
+          type: INTERNAL
+          key: 'zabbix[host,snmp,available]'
+          history: 7d
+          trends: 30d
+          tags:
+            - tag: Application
+              value: Status
+          triggers:
+            - uuid: 5a77d0f332594174ae3a93ebc2e190cf
+              expression: 'max(/Template Econat Fair/zabbix[host,snmp,available],{$SNMP.TIMEOUT})=0'
+              name: 'No SNMP data collection'
+              opdata: 'Current state: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'SNMP is not available for polling. Please check device connectivity and SNMP settings.'
+              tags:
+                - tag: status
+                  value: down
+    - uuid: 00143177b1a34f22aedac4a04ff7956a
+      template: 'Template Econat Filter'
+      name: 'Template Econat Filter'
+      groups:
+        - name: ecofilter
+        - name: econat
+      items:
+        - uuid: 4ae8e8aa2c3941929539fceb8da4f332
+          name: 'Counts of tcp sessions banned by DPI on egress'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.600.0
+          key: econatDpiBannedEgressTcp
+          delay: 30s
+          history: 30d
+          trends: 180d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: a12e0b9ca06e4a1c8986491a0bcbb09a
+          name: 'Counts of tcp sessions banned by DPI on ingress'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.601.0
+          key: econatDpiBannedIngressTcp
+          delay: 30s
+          history: 30d
+          trends: 180d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: e1d6f9df3d6e467b82456df71fd2de2d
+          name: 'Total host buffers in DPI'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.624.0
+          key: econatDpiHostBufsTotal
+          delay: 30s
+          history: 30d
+          trends: 180d
+        - uuid: 77a3c0500e364164820dd3966746580c
+          name: 'Counts of used buffers for host in DPI'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.623.0
+          key: econatDpiHostBufsUsed
+          delay: 30s
+          history: 30d
+          trends: 180d
+        - uuid: 42c6b4baff2c40c48ee3f230083e8c2c
+          name: 'Counts of failed allocating memory for host_mbuf due its exceeded'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.620.0
+          key: econatDpiNoHostBufs
+          delay: 30s
+          history: 30d
+          trends: 180d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: 7d9e8f5bb5004692a07974451c90f779
+          name: 'Counts of failed allocating memory for path_mbuf due its exceeded'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.621.0
+          key: econatDpiNoPathBufs
+          delay: 30s
+          history: 30d
+          trends: 180d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: f9f202ff696a42c5af7dcc5c4771022b
+          name: 'Counts of failed allocating memory for state_mbuf due its exceeded'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.622.0
+          key: econatDpiNoStateBufs
+          delay: 30s
+          history: 30d
+          trends: 180d
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+        - uuid: 1bb7cabb93684ccc9dcb2c17d02e8590
+          name: 'Total path buffers in DPI'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.626.0
+          key: econatDpiPathBufsTotal
+          delay: 30s
+          history: 30d
+          trends: 180d
+        - uuid: e346f69215784842bd836c90033c42ca
+          name: 'Counts of used buffers for url path in DPI'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.625.0
+          key: econatDpiPathBufsUsed
+          delay: 30s
+          history: 30d
+          trends: 180d
+        - uuid: 5e7ce301a8594344b3c030ea766f0442
+          name: 'Last Date Update RKN DB'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.605.0
+          key: econatDpiRKNLastLoad
+          delay: 1h
+          history: 30d
+          trends: 180d
+          units: unixtime
+          description: 'Timestamp of last successful download of Roskomnadzor database'
+        - uuid: 2f670094af6d435ebc34454eb3f9a269
+          name: 'Last Date Suc Pars RKN DB'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.606.0
+          key: econatDpiRKNLastParse
+          delay: 1h
+          history: 30d
+          trends: 180d
+          units: unixtime
+          description: 'Timestamp of last successful parsing of Roskomnadzor database'
+        - uuid: d948c962c3ea4c428c7043c212407e01
+          name: 'Used Session Table'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.68.0
+          key: econatDpiSessionTable
+          delay: 2m
+          history: 30d
+          trends: 180d
+          description: 'Session table Used'
+        - uuid: 34e3062d8b11416e8b676d8f1b761f30
+          name: 'Total session state buffers in DPI'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.628.0
+          key: econatDpiStateBufsTotal
+          delay: 30s
+          history: 30d
+          trends: 180d
+        - uuid: fb9b7131a8184b91833b1df89042a556
+          name: 'Counts of used buffers for session state in DPI'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.627.0
+          key: econatDpiStateBufsUsed
+          delay: 30s
+          history: 30d
+          trends: 180d
+        - uuid: 47a43f4ee6e3448ba0e397c808468f4a
+          name: 'Used Translation Table'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.70.0
+          key: econatDpiTranslationTable
+          delay: 2m
+          history: 30d
+          trends: 180d
+          description: 'Translation table Used'
+    - uuid: 097921344d3d469085f01d6382c78595
+      template: 'Template Econat Interface Traffic Error Bum'
+      name: 'Template Econat Interface Traffic Error Bum'
+      groups:
+        - name: Eco3in1
+        - name: econat
+      items:
+        - uuid: 6a3a115f2af24ea2a2a36fd83e0ac82d
+          name: 'Network Interfaces Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#IFOPERSTATUS},1.3.6.1.2.1.2.2.1.8,{#IFADMINSTATUS},1.3.6.1.2.1.2.2.1.7,{#IFNAME},1.3.6.1.2.1.31.1.1.1.1,{#IFDESCR},1.3.6.1.2.1.2.2.1.2,{#IFTYPE},1.3.6.1.2.1.2.2.1.3]'
+          key: allinterface.discovery
+          delay: '0;60/1-7,02:00-02:01'
+          history: '0'
+          value_type: TEXT
+          trends: '0'
+          tags:
+            - tag: Application
+              value: 'Interfaces Statistic'
+      discovery_rules:
+        - uuid: 3e177ef17d9a4cf4bb1b2f8402c397f2
+          name: 'Network Interfaces Discovery Error and Discard'
+          type: DEPENDENT
+          key: error.if.discovery
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#IFNAME}'
+                value: '^.*Vlan.*$'
+                operator: NOT_MATCHES_REGEX
+                formulaid: A
+          lifetime: 10d
+          item_prototypes:
+            - uuid: a3b1480d0218464b9081dd619f160409
+              name: 'Interface {#IFNAME}({#IFDESCR}): Inbound packets discarded'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.13.{#SNMPINDEX}'
+              key: 'net.if.in.discards[ifInDiscards.{#SNMPINDEX}]'
+              delay: 3m
+              history: 7d
+              trends: 90d
+              units: pps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_ErrDiscard
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFDESCR})'
+            - uuid: b52dc46f3c084f2285a70f98fd5ad249
+              name: 'Interface {#IFNAME}({#IFDESCR}): Inbound packets with errors'
+              type: DEPENDENT
+              key: 'net.if.in.errors[ifInErrors.{#SNMPINDEX}]'
+              delay: '0'
+              history: 7d
+              value_type: FLOAT
+              trends: 90d
+              units: pps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              master_item:
+                key: 'net.if.in.errors_full[ifInErrors.{#SNMPINDEX}]'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Errors
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFDESCR})'
+            - uuid: 755b08eeddad4042a10867fce91ea65e
+              name: 'Interface {#IFNAME}({#IFDESCR}): Inbound packets with errors full'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.14.{#SNMPINDEX}'
+              key: 'net.if.in.errors_full[ifInErrors.{#SNMPINDEX}]'
+              delay: 3m
+              history: 7d
+              value_type: FLOAT
+              trends: 90d
+              units: '!ошиб.'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Errors
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFDESCR})'
+            - uuid: b8b0f4fb6fb046238b6ada73ee0bfa63
+              name: 'Interface {#IFNAME}({#IFDESCR}): Outbound packets with errors'
+              type: DEPENDENT
+              key: 'net.if.out.errors[ifOutErrors.{#SNMPINDEX}]'
+              delay: '0'
+              history: 7d
+              value_type: FLOAT
+              trends: 90d
+              units: pps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              master_item:
+                key: 'net.if.out.errors_full[ifOutErrors.{#SNMPINDEX}]'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Errors
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFDESCR})'
+            - uuid: 4ff82d28324740ec89cbcc34a6438636
+              name: 'Interface {#IFNAME}({#IFDESCR}): Outbound packets with errors full'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.20.{#SNMPINDEX}'
+              key: 'net.if.out.errors_full[ifOutErrors.{#SNMPINDEX}]'
+              delay: 3m
+              history: 7d
+              value_type: FLOAT
+              trends: 90d
+              units: '!ошиб.'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Errors
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFDESCR})'
+          trigger_prototypes:
+            - uuid: 31fe4b9989244f1ba1a91d9fe258f228
+              expression: 'last(/Template Econat Interface Traffic Error Bum/net.if.in.errors_full[ifInErrors.{#SNMPINDEX}])>{$IF.ERRORS.WARN_FULL:"{#IFNAME}"} or last(/Template Econat Interface Traffic Error Bum/net.if.out.errors_full[ifOutErrors.{#SNMPINDEX}])>{$IF.ERRORS.WARN_FULL:"{#IFNAME}"}'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'last(/Template Econat Interface Traffic Error Bum/net.if.in.errors_full[ifInErrors.{#SNMPINDEX}])<{$IF.ERRORS.WARN_FULL:"{#IFNAME}"} and last(/Template Econat Interface Traffic Error Bum/net.if.out.errors_full[ifOutErrors.{#SNMPINDEX}])<{$IF.ERRORS.WARN_FULL:"{#IFNAME}"}'
+              name: 'Interface {#IFNAME}({#IFDESCR}) : errors > {$IF.ERRORS.WARN_FULL:"{#IFNAME}"}'
+              opdata: 'errors_full in: {ITEM.LASTVALUE1}, errors_full out: {ITEM.LASTVALUE2}'
+              priority: AVERAGE
+              manual_close: 'YES'
+              tags:
+                - tag: errors
+                  value: crit
+                - tag: port
+                  value: 'sw:agg'
+            - uuid: a3f6caa263774bbe87ae6f032c7abaaf
+              expression: 'min(/Template Econat Interface Traffic Error Bum/net.if.in.errors[ifInErrors.{#SNMPINDEX}],5m)>{$IF.ERRORS.WARN:"{#IFNAME}"} or min(/Template Econat Interface Traffic Error Bum/net.if.out.errors[ifOutErrors.{#SNMPINDEX}],5m)>{$IF.ERRORS.WARN:"{#IFNAME}"}'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'max(/Template Econat Interface Traffic Error Bum/net.if.in.errors[ifInErrors.{#SNMPINDEX}],5m)<{$IF.ERRORS.WARN:"{#IFNAME}"}*0.8 or max(/Template Econat Interface Traffic Error Bum/net.if.out.errors[ifOutErrors.{#SNMPINDEX}],5m)<{$IF.ERRORS.WARN:"{#IFNAME}"}*0.8'
+              name: 'Interface {#IFNAME}({#IFDESCR}) : High error rate ( > {$IF.ERRORS.WARN:"{#IFNAME}"} for 5m)'
+              opdata: 'errors in: {ITEM.LASTVALUE1}, errors out: {ITEM.LASTVALUE2}'
+              priority: WARNING
+              description: 'Recovers when below 80% of {$ IF.ERRORS.WARN: "{# IFNAME}"} threshold'
+              manual_close: 'YES'
+              tags:
+                - tag: errors
+                  value: crit
+                - tag: port
+                  value: 'sw:agg'
+          graph_prototypes:
+            - uuid: 40c1a681eee24006bc6fa4dcdca29b53
+              name: 'Interface {#IFNAME}({#IFDESCR}): Errors'
+              ymin_type_1: FIXED
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: FF0000
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Econat Interface Traffic Error Bum'
+                    key: 'net.if.in.errors_full[ifInErrors.{#SNMPINDEX}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: '891515'
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Econat Interface Traffic Error Bum'
+                    key: 'net.if.out.errors_full[ifOutErrors.{#SNMPINDEX}]'
+            - uuid: fdd024729f614f53bdced2ae5e047a24
+              name: '{#IFNAME} - ({#IFDESCR}): Error and Discared Traffic'
+              graph_items:
+                - color: F63100
+                  yaxisside: RIGHT
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Econat Interface Traffic Error Bum'
+                    key: 'net.if.out.errors[ifOutErrors.{#SNMPINDEX}]'
+                - sortorder: '1'
+                  color: A54F10
+                  yaxisside: RIGHT
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Econat Interface Traffic Error Bum'
+                    key: 'net.if.in.errors[ifInErrors.{#SNMPINDEX}]'
+                - sortorder: '3'
+                  color: 6C59DC
+                  yaxisside: RIGHT
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Econat Interface Traffic Error Bum'
+                    key: 'net.if.in.discards[ifInDiscards.{#SNMPINDEX}]'
+          master_item:
+            key: allinterface.discovery
+        - uuid: 47f180bb1851419f95b9a06548f4e9f2
+          name: 'Network Interfaces Discovery Traffic Statistic'
+          type: DEPENDENT
+          key: net.if.discovery
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#IFNAME}'
+                value: '^.*Vlan.*$'
+                operator: NOT_MATCHES_REGEX
+                formulaid: A
+          lifetime: 10d
+          item_prototypes:
+            - uuid: fd07d1140f3e475bbbef1f535626a9f4
+              name: 'Interface {#IFNAME}({#IFDESCR}): Bits received'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.31.1.1.1.6.{#SNMPINDEX}'
+              key: 'net.if.in[ifHCInOctets.{#SNMPINDEX}]'
+              delay: '180'
+              history: 7d
+              trends: 90d
+              units: bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_In_Octets
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFDESCR})'
+            - uuid: ac593425f7694fe3b613c4b845d57ed0
+              name: 'Interface {#IFNAME}({#IFDESCR}): Bits sent'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.31.1.1.1.10.{#SNMPINDEX}'
+              key: 'net.if.out[ifHCOutOctets.{#SNMPINDEX}]'
+              delay: '180'
+              history: 7d
+              trends: 90d
+              units: bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Out_Octets
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFDESCR})'
+            - uuid: 48fd2d9040734b84a1a107685bcda5a2
+              name: 'Interface {#IFNAME}({#IFDESCR}): Speed'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.31.1.1.1.15.{#SNMPINDEX}'
+              key: 'net.if.speed[ifHighSpeed.{#SNMPINDEX}]'
+              delay: '180'
+              history: 7d
+              trends: '0'
+              units: bps
+              preprocessing:
+                - type: MULTIPLIER
+                  parameters:
+                    - '1000000'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Status
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFDESCR})'
+            - uuid: b150723c6e8744a8bda4592b3b147283
+              name: 'Interface {#IFNAME}({#IFDESCR}): Operational status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}'
+              key: 'net.if.status[ifOperStatus.{#SNMPINDEX}]'
+              delay: '180'
+              history: 7d
+              trends: '0'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Status
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFDESCR})'
+              trigger_prototypes:
+                - uuid: 32b0eafda9074aecba160f7bd68cc297
+                  expression: '{$IFCONTROL:"{#IFNAME}"}=1 and (last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}])=2 and (last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}],#1)<>last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}],#2))=1)'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2'
+                  name: 'Interface {#IFNAME}({#IFDESCR}) : Link down'
+                  opdata: 'Current state: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  description: |
+                    This trigger expression works as follows:
+                    1. Can be triggered if operations status is down.
+                    2. {$IFCONTROL:"{#IFNAME}"}=1 - user can redefine Context macro to value - 0. That marks this interface as not important. No new trigger will be fired if this interface is down.
+                    3. {TEMPLATE_NAME:METRIC.diff()}=1) - trigger fires only if operational status was up(1) sometime before. (So, do not fire 'ethernal off' interfaces.)
+                    
+                    WARNING: if closed manually - won't fire again on next poll, because of .diff.
+                  manual_close: 'YES'
+                  tags:
+                    - tag: port
+                      value: 'sw:agg'
+            - uuid: b341d1cec54641f08675ca55f552865d
+              name: 'Interface {#IFNAME}({#IFDESCR}): Interface type'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.3.{#SNMPINDEX}'
+              key: 'net.if.type[ifType.{#SNMPINDEX}]'
+              delay: '180'
+              history: 7d
+              trends: '0'
+              tags:
+                - tag: Check_Device
+                  value: Net_Int_Status
+                - tag: Net_Interface
+                  value: '{#IFNAME}({#IFDESCR})'
+            - uuid: b3aabac261bf490b8c8bf22e450e5a67
+              name: 'Snmp Traps - LinkUp/Down - Interface {#IFNAME}'
+              type: SNMP_TRAP
+              key: 'snmptrap["(IF-MIB::linkDown|IF-MIB::linkUp)(.|\n)*ifIndex.*\:\s{#SNMPINDEX}($|\n)"]'
+              delay: '0'
+              history: 2d
+              value_type: TEXT
+              trends: '0'
+              description: 'Ловит snmp trap link up/down по интерфейсу'
+              preprocessing:
+                - type: REGEX
+                  parameters:
+                    - 'IF-MIB::(linkDown|linkUp)'
+                    - \1
+              tags:
+                - tag: Application
+                  value: 'Snmp Traps'
+              trigger_prototypes:
+                - uuid: f15ea486068440ddbfc6c7ec51df9733
+                  expression: 'find(/Template Econat Interface Traffic Error Bum/snmptrap["(IF-MIB::linkDown|IF-MIB::linkUp)(.|\n)*ifIndex.*\:\s{#SNMPINDEX}($|\n)"],,"like","linkDown")=1 and nodata(/Template Econat Interface Traffic Error Bum/snmptrap["(IF-MIB::linkDown|IF-MIB::linkUp)(.|\n)*ifIndex.*\:\s{#SNMPINDEX}($|\n)"],7m)=0'
+                  name: 'Interface {#IFNAME}({#IFDESCR}) - Link Down'
+                  opdata: 'Last trap: {ITEM.LASTVALUE1}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: up/down
+                - uuid: 842958341b6847b081b7760ba36c7599
+                  expression: 'find(/Template Econat Interface Traffic Error Bum/snmptrap["(IF-MIB::linkDown|IF-MIB::linkUp)(.|\n)*ifIndex.*\:\s{#SNMPINDEX}($|\n)"],,"like","linkUp")=1 and nodata(/Template Econat Interface Traffic Error Bum/snmptrap["(IF-MIB::linkDown|IF-MIB::linkUp)(.|\n)*ifIndex.*\:\s{#SNMPINDEX}($|\n)"],7m)=0'
+                  name: 'Interface {#IFNAME}({#IFDESCR}) - Link Up'
+                  opdata: 'Last trap: {ITEM.LASTVALUE1}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: up/down
+          trigger_prototypes:
+            - uuid: dba08ce626b54435925fa59453d0a7b2
+              expression: |
+                change(/Template Econat Interface Traffic Error Bum/net.if.speed[ifHighSpeed.{#SNMPINDEX}])<0 and last(/Template Econat Interface Traffic Error Bum/net.if.speed[ifHighSpeed.{#SNMPINDEX}])>0 and (
+                last(/Template Econat Interface Traffic Error Bum/net.if.type[ifType.{#SNMPINDEX}])=6 or
+                last(/Template Econat Interface Traffic Error Bum/net.if.type[ifType.{#SNMPINDEX}])=7 or
+                last(/Template Econat Interface Traffic Error Bum/net.if.type[ifType.{#SNMPINDEX}])=11 or
+                last(/Template Econat Interface Traffic Error Bum/net.if.type[ifType.{#SNMPINDEX}])=62 or
+                last(/Template Econat Interface Traffic Error Bum/net.if.type[ifType.{#SNMPINDEX}])=69 or
+                last(/Template Econat Interface Traffic Error Bum/net.if.type[ifType.{#SNMPINDEX}])=117
+                )
+                and
+                (last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2)
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: '(change(/Template Econat Interface Traffic Error Bum/net.if.speed[ifHighSpeed.{#SNMPINDEX}])<0 and last(/Template Econat Interface Traffic Error Bum/net.if.speed[ifHighSpeed.{#SNMPINDEX}])>0) or (last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}])=2)'
+              name: 'Interface {#IFNAME}({#IFDESCR}) : Ethernet has changed to lower speed than it was before'
+              opdata: 'Current reported speed: {ITEM.LASTVALUE1}'
+              priority: INFO
+              description: 'This Ethernet connection has transitioned down from its known maximum speed. This might be a sign of autonegotiation issues. Ack to close.'
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Interface {#IFNAME}({#IFDESCR}) : Link down'
+                  expression: '{$IFCONTROL:"{#IFNAME}"}=1 and (last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}])=2 and (last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}],#1)<>last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}],#2))=1)'
+                  recovery_expression: 'last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2'
+              tags:
+                - tag: port
+                  value: change
+            - uuid: 2a21839a0300449ca950852dda2f81ff
+              expression: |
+                (avg(/Template Econat Interface Traffic Error Bum/net.if.in[ifHCInOctets.{#SNMPINDEX}],15m)>({$IF.UTIL.MAX:"{#IFNAME}"}/100)*last(/Template Econat Interface Traffic Error Bum/net.if.speed[ifHighSpeed.{#SNMPINDEX}]) or
+                avg(/Template Econat Interface Traffic Error Bum/net.if.out[ifHCOutOctets.{#SNMPINDEX}],15m)>({$IF.UTIL.MAX:"{#IFNAME}"}/100)*last(/Template Econat Interface Traffic Error Bum/net.if.speed[ifHighSpeed.{#SNMPINDEX}])) and
+                last(/Template Econat Interface Traffic Error Bum/net.if.speed[ifHighSpeed.{#SNMPINDEX}])>0
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: |
+                avg(/Template Econat Interface Traffic Error Bum/net.if.in[ifHCInOctets.{#SNMPINDEX}],15m)<(({$IF.UTIL.MAX:"{#IFNAME}"}-3)/100)*last(/Template Econat Interface Traffic Error Bum/net.if.speed[ifHighSpeed.{#SNMPINDEX}]) and
+                avg(/Template Econat Interface Traffic Error Bum/net.if.out[ifHCOutOctets.{#SNMPINDEX}],15m)<(({$IF.UTIL.MAX:"{#IFNAME}"}-3)/100)*last(/Template Econat Interface Traffic Error Bum/net.if.speed[ifHighSpeed.{#SNMPINDEX}])
+              name: 'Interface {#IFNAME}({#IFDESCR}) : High bandwidth usage ( > {$IF.UTIL.MAX:"{#IFNAME}"}% )'
+              opdata: 'In: {ITEM.LASTVALUE1}, out: {ITEM.LASTVALUE3}, speed: {ITEM.LASTVALUE2}'
+              priority: WARNING
+              description: 'The network interface utilization is close to its estimated maximum bandwidth.'
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Interface {#IFNAME}({#IFDESCR}) : Link down'
+                  expression: '{$IFCONTROL:"{#IFNAME}"}=1 and (last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}])=2 and (last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}],#1)<>last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}],#2))=1)'
+                  recovery_expression: 'last(/Template Econat Interface Traffic Error Bum/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2'
+              tags:
+                - tag: port
+                  value: bndw
+          graph_prototypes:
+            - uuid: 36c6f508a86a4b3294d7c361d9669fc6
+              name: '{#IFNAME} - ({#IFDESCR}): Network Traffic'
+              graph_items:
+                - drawtype: BOLD_LINE
+                  color: 2774A4
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Econat Interface Traffic Error Bum'
+                    key: 'net.if.out[ifHCOutOctets.{#SNMPINDEX}]'
+                - sortorder: '1'
+                  drawtype: GRADIENT_LINE
+                  color: 1A7C11
+                  calc_fnc: ALL
+                  item:
+                    host: 'Template Econat Interface Traffic Error Bum'
+                    key: 'net.if.in[ifHCInOctets.{#SNMPINDEX}]'
+          master_item:
+            key: allinterface.discovery
+      macros:
+        - macro: '{$IF.ERRORS.WARN}'
+          value: '0.5'
+        - macro: '{$IF.ERRORS.WARN_FULL}'
+          value: '3000'
+        - macro: '{$IF.UTIL.MAX}'
+          value: '80'
+        - macro: '{$IFCONTROL}'
+          value: '1'
+      valuemaps:
+        - uuid: 674cb0ced24c46dbb841fce889a7b95a
+          name: 'SNMP interface status (ifOperStatus)'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '3'
+              newvalue: testing
+            - value: '4'
+              newvalue: unknown
+            - value: '5'
+              newvalue: dormant
+            - value: '6'
+              newvalue: notPresent
+            - value: '7'
+              newvalue: lowerLayerDown
+    - uuid: 23c13a847c624a2dad808ef04196f376
+      template: 'Template Econat Sesion and Connection per sec'
+      name: 'Template Econat Sesion and Connection per sec'
+      groups:
+        - name: econat
+      items:
+        - uuid: 6db7c365cbe6435e922eeaeda1692f1d
+          name: 'Counts of allocating TCP session per second'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.180
+          key: econatSessTcpAllocPerSec
+          delay: 30s
+          history: 30d
+          trends: 160d
+        - uuid: 111682740a9b411aa06e3c4beddd8dfa
+          name: 'Counts of allocating UDP session per second'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.182
+          key: econatSessUdpAllocPerSec
+          delay: 30s
+          history: 30d
+          trends: 160d
+        - uuid: a00b54b48147460798cae8fb0fcea653
+          name: 'Counts of creating TCP connections per second'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.181
+          key: econatTcpStateEstablishedPerSec
+          delay: 10s
+          history: 30d
+          trends: 160d
+        - uuid: 2e3d17c9c38746d49d61cc5c233c1665
+          name: 'Counts of creating UDP connections per second'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.45555.1.2.183
+          key: econatUdpStateEstablishedPerSec
+          delay: 10s
+          history: 30d
+          trends: 160d
+  triggers:
+    - uuid: a0d64db1a4b64131be61025561e0624c
+      expression: '(last(/Template Econat Filter/econatDpiStateBufsUsed,#10)*100)/last(/Template Econat Filter/econatDpiStateBufsTotal,#1)>70'
+      name: 'state bufs more 70%'
+      priority: WARNING
+    - uuid: 239e015c31ec4d4ab00e4e3eb7a79ef4
+      expression: '(last(/Template Econat Filter/econatDpiRKNLastParse)=max(/Template Econat Filter/econatDpiRKNLastParse,24h)) or (last(/Template Econat Filter/econatDpiRKNLastLoad)=max(/Template Econat Filter/econatDpiRKNLastLoad,24h))'
+      name: 'Update RKN Blocked List'
+      status: DISABLED
+      priority: WARNING
+      description: 'Возможно оно не работает, надо проверить и активировать!'
+      manual_close: 'YES'
+  graphs:
+    - uuid: 0960dfd38ad241e0b692b5f12fa402f5
+      name: 'Counts of allocating TCP/UDP session per second'
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Sesion and Connection per sec'
+            key: econatSessTcpAllocPerSec
+        - sortorder: '1'
+          color: F63100
+          item:
+            host: 'Template Econat Sesion and Connection per sec'
+            key: econatSessUdpAllocPerSec
+    - uuid: 3767ff6a5f4c44aab36b8caa690e260b
+      name: 'Counts of creating TCP/UDP connections per second'
+      graph_items:
+        - sortorder: '2'
+          color: 2774A4
+          item:
+            host: 'Template Econat Fair'
+            key: econatIpv6EstablishedPerSec
+    - uuid: 80f56c1e532d4586a282e3bee8a7977c
+      name: 'Counts of creating TCP/UDP connections per second'
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Sesion and Connection per sec'
+            key: econatTcpStateEstablishedPerSec
+        - sortorder: '1'
+          color: F63100
+          item:
+            host: 'Template Econat Sesion and Connection per sec'
+            key: econatUdpStateEstablishedPerSec
+    - uuid: 6b12e591de124a2699c50cc7436880ec
+      name: 'Counts of free membufs of dataplane mempool on socket 0/1'
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Fair'
+            key: econatDispFreeMbufs0
+        - sortorder: '1'
+          color: F63100
+          item:
+            host: 'Template Econat Fair'
+            key: econatDispFreeMbufs1
+    - uuid: a6c31be4b96d48fe8ff6fed8fce2794b
+      name: 'Counts of TCP/UDP/ICMP sessions'
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Fair'
+            key: econatIcmpSessions
+        - sortorder: '1'
+          color: F63100
+          item:
+            host: 'Template Econat Fair'
+            key: econatTcpSessions
+        - sortorder: '2'
+          color: 2774A4
+          item:
+            host: 'Template Econat Fair'
+            key: econatUdpSessions
+    - uuid: 0aff0447efde486c83dd2c562cbe0bfd
+      name: 'CPU Load'
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Fair'
+            key: econatDpCpuBurst
+    - uuid: e8ec4f75616d40ba9a60b5c1c145cb08
+      name: 'Date Update RKN'
+      graph_items:
+        - drawtype: BOLD_LINE
+          color: D81B60
+          calc_fnc: ALL
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiRKNLastParse
+        - sortorder: '1'
+          drawtype: BOLD_LINE
+          color: 0097A7
+          calc_fnc: ALL
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiRKNLastLoad
+    - uuid: 6c770de19b4e49129fb37f4c9067ccbc
+      name: dpi-banned
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiBannedEgressTcp
+        - sortorder: '1'
+          color: 2774A4
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiBannedIngressTcp
+    - uuid: 641200fc710145a7a36c11f117720c24
+      name: 'DPI Resources'
+      graph_items:
+        - color: D84315
+          calc_fnc: ALL
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiSessionTable
+        - sortorder: '1'
+          color: F9A825
+          calc_fnc: ALL
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiTranslationTable
+    - uuid: dac8ea92ee2c48ce88480cc73127e10a
+      name: ecofilter
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiBannedEgressTcp
+        - sortorder: '1'
+          color: 3333FF
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiBannedIngressTcp
+        - sortorder: '2'
+          color: 2774A4
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiNoHostBufs
+        - sortorder: '3'
+          color: A54F10
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiNoPathBufs
+        - sortorder: '4'
+          color: FC6EA3
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiNoStateBufs
+    - uuid: ba22fdc5bb084362a7286ca1b0cd60f0
+      name: ERRORS
+      width: '800'
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Fair'
+            key: econatSessionAllocErrorEgress
+        - sortorder: '1'
+          color: F63100
+          item:
+            host: 'Template Econat Fair'
+            key: econatSessionAllocErrorIngress
+        - sortorder: '2'
+          color: 2774A4
+          item:
+            host: 'Template Econat Fair'
+            key: econatTranslationAllocError
+        - sortorder: '3'
+          color: A54F10
+          item:
+            host: 'Template Econat Fair'
+            key: econatSessionFreeError
+        - sortorder: '4'
+          color: FC6EA3
+          item:
+            host: 'Template Econat Fair'
+            key: econatConnRingOverflow
+        - sortorder: '5'
+          color: 6C59DC
+          item:
+            host: 'Template Econat Fair'
+            key: econatSessionAllocNoPoolEgress
+        - sortorder: '6'
+          color: AC8C14
+          item:
+            host: 'Template Econat Fair'
+            key: econatSessionAllocNoPoolIngress
+        - sortorder: '7'
+          color: 611F27
+          item:
+            host: 'Template Econat Fair'
+            key: econatTransPerUserLimitExceeded
+    - uuid: 921b4b65ae514febb92bb8cde78c1d1c
+      name: 'Free amount of memory in econat platform'
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Fair'
+            key: econatCpFreeMemory
+    - uuid: 321ad6820c0642ec81e9beadc2d12ad2
+      name: 'Free amount of memory in econat software'
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Fair'
+            key: econatDpFreeMemory
+    - uuid: c1eb7773e34c4ed29e9cde44b0ae9f92
+      name: host-bufs
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiHostBufsUsed
+    - uuid: 84095b06752e4056b3d6a1fa18822be7
+      name: path-bufs
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiPathBufsUsed
+    - uuid: 9ffe335c2af34befa39164e91c54848a
+      name: state-bufs
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiStateBufsUsed
+        - sortorder: '1'
+          color: 2774A4
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiStateBufsTotal
+    - uuid: 1994034ab51f49d6ab4078d6c6214f0e
+      name: used-dpi-bufs
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiHostBufsUsed
+        - sortorder: '1'
+          color: F63100
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiPathBufsUsed
+        - sortorder: '2'
+          color: 2774A4
+          item:
+            host: 'Template Econat Filter'
+            key: econatDpiStateBufsUsed
