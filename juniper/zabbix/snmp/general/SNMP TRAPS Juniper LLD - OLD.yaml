@@ -1,0 +1,304 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: b2ec6b780f1e42f7a21396021047e0b4
+      name: Juniper
+    - uuid: 0cb6d2bab95141b58f2e4bcf37f34212
+      name: SNMP_TRAPS
+  templates:
+    - uuid: 31f7d325eede4bc69bada70f93f67f42
+      template: 'SNMP TRAPS Juniper LLD - OLD'
+      name: 'SNMP TRAPS Juniper LLD - OLD'
+      groups:
+        - name: Juniper
+        - name: SNMP_TRAPS
+      items:
+        - uuid: ecdbcc19b2db438eb9e0aaca5ca433d5
+          name: 'BFD Session Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#ADDRTYPE},1.3.6.1.4.1.2636.5.3.1.1.2.1.13]'
+          key: 'bfdSess[discovery]'
+          delay: 12h
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          tags:
+            - tag: Application
+              value: 'SNMP TRAPS'
+        - uuid: 2a64f86f4f6b4e5c9c93a74fde5e55fc
+          name: 'JunVPN Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#VPNSTATE},1.3.6.1.4.1.2636.3.26.1.2.1.3]'
+          key: 'junvpn[discovery]'
+          delay: '0;60/1-7,05:30-05:31'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          tags:
+            - tag: Application
+              value: 'SNMP TRAPS'
+      discovery_rules:
+        - uuid: acada966187e46d9b409d8ed41099399
+          name: 'BFD Session Discovery for ipv4'
+          type: DEPENDENT
+          key: 'bfdSessAddrLLD[ipv4]'
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#ADDRTYPE}'
+                value: '1'
+                formulaid: A
+          lifetime: 1d
+          item_prototypes:
+            - uuid: 607bedf4192e447b82ae4172eec977a3
+              name: 'SNMP TRAP - BFD ADDR [{#SNMPINDEX}]'
+              type: DEPENDENT
+              key: 'bfdSessAddr[ipv4-{#SNMPINDEX}]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: LOG
+              preprocessing:
+                - type: REGEX
+                  parameters:
+                    - 'bfdSessAddr\..*\:\s(.*[0-9a-fA-F])'
+                    - \1
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      if(value.indexOf('"') == -1){
+                        arr = value.split(" ");
+                        resultip = '';
+                        arr.forEach(function (item, i, arr) {
+                          if (i==0){
+                            resultip = resultip + parseInt(item, 16);
+                          }else{
+                            resultip = resultip + '.' + parseInt(item, 16);
+                            }
+                        });
+                        return resultip;
+                      }else{
+                        return 0;
+                      }
+              master_item:
+                key: 'snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s1($|\n)"]'
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+            - uuid: 589b6b211176485a8eab92f1c33b4386
+              name: 'SNMP TRAP - BFD Session [{#SNMPINDEX}]'
+              type: SNMP_TRAP
+              key: 'snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s1($|\n)"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: LOG
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+          trigger_prototypes:
+            - uuid: 2f97acbb97cb40f7804a55065e17c8ac
+              expression: '(nodata(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s1($|\n)"],5m)=0 or nodata(/SNMP TRAPS Juniper LLD - OLD/bfdSessAddr[ipv4-{#SNMPINDEX}],5m)=0) and find(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s1($|\n)"],,"regexp","bfdSessDown")=1'
+              name: 'BFD Session Down'
+              opdata: '{{ITEM.LASTVALUE1}.regsub("ifName.*\"(.*)\"","Int: \1")} IP: {ITEM.LASTVALUE2}'
+              manual_close: 'YES'
+              tags:
+                - tag: trap
+                  value: bfd
+            - uuid: b48feaab9962454cb260d13a242cf861
+              expression: '(nodata(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s1($|\n)"],5m)=0 or nodata(/SNMP TRAPS Juniper LLD - OLD/bfdSessAddr[ipv4-{#SNMPINDEX}],5m)=0) and find(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s1($|\n)"],,"regexp","bfdSessUp")=1'
+              name: 'BFD Session Up'
+              opdata: '{{ITEM.LASTVALUE1}.regsub("ifName.*\"(.*)\"","Int: \1")} IP: {ITEM.LASTVALUE2}'
+              manual_close: 'YES'
+              tags:
+                - tag: trap
+                  value: bfd
+          master_item:
+            key: 'bfdSess[discovery]'
+        - uuid: fa72ab27be5746df8191ce49d0e6c643
+          name: 'BFD Session Discovery for ipv6'
+          type: DEPENDENT
+          key: 'bfdSessAddrLLD[ipv6]'
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#ADDRTYPE}'
+                value: '2'
+                formulaid: A
+          lifetime: 1d
+          item_prototypes:
+            - uuid: 35d27800ed484dcdada9f0ec4a2715ab
+              name: 'SNMP TRAP - BFD ADDR [{#SNMPINDEX}]'
+              type: DEPENDENT
+              key: 'bfdSessAddr[ipv6-{#SNMPINDEX}]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: LOG
+              preprocessing:
+                - type: REGEX
+                  parameters:
+                    - 'bfdSessAddr\..*\:\s(.*[0-9a-fA-F])'
+                    - \1
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      if(value.indexOf('"') == -1){
+                        arr = value.split(" ");
+                        resultip = '';
+                        final = '';
+                        start = 0;
+                        end = 0;
+                        end_one = 0;
+                        arr.forEach(function (item, i, arr) {
+                          
+                            if (i==0){
+                               if ((item=="00" && arr[i+1]=="00") || (item!=="00")){
+                                 resultip = resultip + item;
+                               }
+                            }else if(i%2==0){
+                              if ((item=="00" && arr[i+1]=="00") || (item!=="00")){
+                                resultip = resultip + ":" + item.replace(/0(.*[^0])/,'$1');
+                              }else{resultip = resultip + ":";}
+                            }else{
+                              if ((arr[i-1]=="00") && (item!=="00")){
+                                resultip = resultip + item.replace(/0(.*[^0])/,'$1');
+                              }else{
+                                resultip = resultip + item;
+                              }
+                            }
+                         });
+                        octeti = resultip.split(":");
+                        octeti.forEach(function (item, i, octeti) {
+                          if (item=="0000"){
+                            if (end_one==0){
+                              if (octeti[i+1]=="0000"){
+                                start=start+1;
+                              }else{
+                                final = final + "::";
+                                start = 0;
+                                end_one = 1;
+                                end = 1;
+                              }
+                            }else{
+                              final = final + ":0";
+                            }
+                          }else{
+                             if (i==0){
+                               final = final + item;
+                             }else if (end==1){
+                               final = final + item;
+                               end=0
+                             }else{
+                                final = final + ":" + item;
+                              }
+                          }
+                        });
+                        return final;
+                      }else{
+                        return 0;
+                      }
+              master_item:
+                key: 'snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s2($|\n)"]'
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+            - uuid: 3ded4c9035ad43baa0192f33d60c9b16
+              name: 'SNMP TRAP - BFD Session [{#SNMPINDEX}]'
+              type: SNMP_TRAP
+              key: 'snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s2($|\n)"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: LOG
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+          trigger_prototypes:
+            - uuid: 22b2457008ae4d1a93fa20fc4bb7bbaa
+              expression: '(nodata(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s2($|\n)"],5m)=0 or nodata(/SNMP TRAPS Juniper LLD - OLD/bfdSessAddr[ipv6-{#SNMPINDEX}],5m)=0) and find(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s2($|\n)"],,"regexp","bfdSessDown")=1'
+              name: 'BFD Session Down'
+              opdata: '{{ITEM.LASTVALUE1}.regsub("ifName.*\"(.*)\"","Int: \1")} IP: {ITEM.LASTVALUE2}'
+              manual_close: 'YES'
+              tags:
+                - tag: trap
+                  value: bfd
+            - uuid: 558a82b0d00c4c72ba4e37ff92f03582
+              expression: '(nodata(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s2($|\n)"],5m)=0 or nodata(/SNMP TRAPS Juniper LLD - OLD/bfdSessAddr[ipv6-{#SNMPINDEX}],5m)=0) and find(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s2($|\n)"],,"regexp","bfdSessUp")=1'
+              name: 'BFD Session Up'
+              opdata: '{{ITEM.LASTVALUE1}.regsub("ifName.*\"(.*)\"","Int: \1")} IP: {ITEM.LASTVALUE2}'
+              manual_close: 'YES'
+              tags:
+                - tag: trap
+                  value: bfd
+          master_item:
+            key: 'bfdSess[discovery]'
+        - uuid: 8a6913313f594acdab0de896d0cc2546
+          name: 'VPN STATE TRAP'
+          type: DEPENDENT
+          key: trap.vpn
+          delay: '0'
+          lifetime: 1d
+          description: |
+            jnxVpnRowStatus
+            "This variable is used to create, modify, and/or delete a
+                     row in this table."
+          item_prototypes:
+            - uuid: 0ea4131e9d624ae6909a2453c0c8983d
+              name: 'VPN Interface - {#SNMPINDEX}'
+              type: SNMP_TRAP
+              key: 'snmptrap["(jnxVpnIfUp|jnxVpnIfDown)\s.*{#SNMPINDEX}"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+              trigger_prototypes:
+                - uuid: a97d1b1b60aa416c95ad7de3d6065338
+                  expression: 'nodata(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(jnxVpnIfUp|jnxVpnIfDown)\s.*{#SNMPINDEX}"],5m)=0 and find(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(jnxVpnIfUp|jnxVpnIfDown)\s.*{#SNMPINDEX}"],,"regexp","jnxVpnIfDown")=1'
+                  name: 'VPN {{#SNMPINDEX}.regsub("(.*.)\"(.*)\"","\1\2")} - DOWN'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxVpnIfVpnName.*:\s\"(.*)\"","Name: \1")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: vpn
+                - uuid: 64185fe8f57d44929245d8dd5c9bf4a5
+                  expression: 'nodata(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(jnxVpnIfUp|jnxVpnIfDown)\s.*{#SNMPINDEX}"],5m)=0 and find(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(jnxVpnIfUp|jnxVpnIfDown)\s.*{#SNMPINDEX}"],,"regexp","jnxVpnIfUp")=1'
+                  name: 'VPN {{#SNMPINDEX}.regsub("(.*.)\"(.*)\"","\1\2")} - UP'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxVpnIfVpnName.*:\s\"(.*)\"","Name: \1")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: vpn
+            - uuid: 020adeb50e804113b576257df7193584
+              name: 'VPN Pseudowire - {#SNMPINDEX}'
+              type: SNMP_TRAP
+              key: 'snmptrap["(jnxVpnPwUp|jnxVpnPwDown)\s.*{#SNMPINDEX}"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+              trigger_prototypes:
+                - uuid: a4dbfb80c08b420691d534d490d618ae
+                  expression: 'nodata(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(jnxVpnPwUp|jnxVpnPwDown)\s.*{#SNMPINDEX}"],5m)=0 and find(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(jnxVpnPwUp|jnxVpnPwDown)\s.*{#SNMPINDEX}"],,"regexp","jnxVpnPwDown")=1'
+                  name: 'VPN PW {{#SNMPINDEX}.regsub("(.*.)\"(.*)\"","\1\2")} - DOWN'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxVpnPwVpnName.*:\s\"(.*)\"","Name: \1")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: 'vpn:pw'
+                - uuid: dd2f31f1155642ce97333212986292c1
+                  expression: 'nodata(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(jnxVpnPwUp|jnxVpnPwDown)\s.*{#SNMPINDEX}"],5m)=0 and find(/SNMP TRAPS Juniper LLD - OLD/snmptrap["(jnxVpnPwUp|jnxVpnPwDown)\s.*{#SNMPINDEX}"],,"regexp","jnxVpnPwUp")=1'
+                  name: 'VPN PW {{#SNMPINDEX}.regsub("(.*.)\"(.*)\"","\1\2")} - UP'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxVpnPwVpnName.*:\s\"(.*)\"","Name: \1")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: 'vpn:pw'
+          master_item:
+            key: 'junvpn[discovery]'
