@@ -1,0 +1,100 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: b2ec6b780f1e42f7a21396021047e0b4
+      name: Juniper
+    - uuid: 0cb6d2bab95141b58f2e4bcf37f34212
+      name: SNMP_TRAPS
+  templates:
+    - uuid: 40be9a5a3db542d8901b442bd5931799
+      template: 'Juniper VPN State and Traps'
+      name: 'Juniper VPN State and Traps'
+      groups:
+        - name: Juniper
+        - name: SNMP_TRAPS
+      items:
+        - uuid: f2c9b173c8624c729ac17cfc5e2b5cbd
+          name: 'JunVPN All'
+          type: SNMP_AGENT
+          snmp_oid: 'walk[1.3.6.1.4.1.2636.3.26.1.2.1.3]'
+          key: 'junvpn[all]'
+          delay: '0;60/1-7,05:30-05:31'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            - type: SNMP_WALK_TO_JSON
+              parameters:
+                - '{#VPNSTATE}'
+                - 1.3.6.1.4.1.2636.3.26.1.2.1.3
+                - '0'
+      discovery_rules:
+        - uuid: 83e48bb4827f45288892caca7b2d37c7
+          name: 'VPN STATE TRAP'
+          type: DEPENDENT
+          key: trap.vpn.discovery
+          delay: '0'
+          lifetime: 1d
+          description: |
+            jnxVpnRowStatus
+            "This variable is used to create, modify, and/or delete a
+                     row in this table."
+          item_prototypes:
+            - uuid: b2c2955aa4b84bf0b5d6d76a5b0a50a5
+              name: 'VPN Interface - {#SNMPINDEX}'
+              type: SNMP_TRAP
+              key: 'snmptrap["(jnxVpnIfUp|jnxVpnIfDown)\s.*{#SNMPINDEX}"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+              trigger_prototypes:
+                - uuid: bb427ffd232c41889820ad148a2bcdd8
+                  expression: 'nodata(/Juniper VPN State and Traps/snmptrap["(jnxVpnIfUp|jnxVpnIfDown)\s.*{#SNMPINDEX}"],5m)=0 and find(/Juniper VPN State and Traps/snmptrap["(jnxVpnIfUp|jnxVpnIfDown)\s.*{#SNMPINDEX}"],,"regexp","jnxVpnIfDown")=1'
+                  name: 'VPN {{#SNMPINDEX}.regsub("(.*.)\"(.*)\"","\1\2")} - DOWN'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxVpnIfVpnName.*:\s\"(.*)\"","Name: \1")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: vpn
+                - uuid: 038d536ce050413997cef80bb2c288a6
+                  expression: 'nodata(/Juniper VPN State and Traps/snmptrap["(jnxVpnIfUp|jnxVpnIfDown)\s.*{#SNMPINDEX}"],5m)=0 and find(/Juniper VPN State and Traps/snmptrap["(jnxVpnIfUp|jnxVpnIfDown)\s.*{#SNMPINDEX}"],,"regexp","jnxVpnIfUp")=1'
+                  name: 'VPN {{#SNMPINDEX}.regsub("(.*.)\"(.*)\"","\1\2")} - UP'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxVpnIfVpnName.*:\s\"(.*)\"","Name: \1")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: vpn
+            - uuid: b435bfc79c2d4d37b4251e4e87095c42
+              name: 'VPN Pseudowire - {#SNMPINDEX}'
+              type: SNMP_TRAP
+              key: 'snmptrap["(jnxVpnPwUp|jnxVpnPwDown)\s.*{#SNMPINDEX}"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+              trigger_prototypes:
+                - uuid: 3c5ed690e38c4597b5b4a79f98f3b85d
+                  expression: 'nodata(/Juniper VPN State and Traps/snmptrap["(jnxVpnPwUp|jnxVpnPwDown)\s.*{#SNMPINDEX}"],5m)=0 and find(/Juniper VPN State and Traps/snmptrap["(jnxVpnPwUp|jnxVpnPwDown)\s.*{#SNMPINDEX}"],,"regexp","jnxVpnPwDown")=1'
+                  name: 'VPN PW {{#SNMPINDEX}.regsub("(.*.)\"(.*)\"","\1\2")} - DOWN'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxVpnPwVpnName.*:\s\"(.*)\"","Name: \1")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: 'vpn:pw'
+                - uuid: 4eac1994a4f94886b34318c76799ac80
+                  expression: 'nodata(/Juniper VPN State and Traps/snmptrap["(jnxVpnPwUp|jnxVpnPwDown)\s.*{#SNMPINDEX}"],5m)=0 and find(/Juniper VPN State and Traps/snmptrap["(jnxVpnPwUp|jnxVpnPwDown)\s.*{#SNMPINDEX}"],,"regexp","jnxVpnPwUp")=1'
+                  name: 'VPN PW {{#SNMPINDEX}.regsub("(.*.)\"(.*)\"","\1\2")} - UP'
+                  opdata: '{{ITEM.LASTVALUE1}.regsub("jnxVpnPwVpnName.*:\s\"(.*)\"","Name: \1")}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: 'vpn:pw'
+          master_item:
+            key: 'junvpn[all]'

@@ -1,0 +1,210 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: b2ec6b780f1e42f7a21396021047e0b4
+      name: Juniper
+    - uuid: 0cb6d2bab95141b58f2e4bcf37f34212
+      name: SNMP_TRAPS
+  templates:
+    - uuid: 104def70de2e4e33b74e1a0702fe275b
+      template: 'Juniper BFD State and Traps'
+      name: 'Juniper BFD State and Traps'
+      description: |
+        Juniper BFD State and Traps 
+        MIB: JNX-BFD-STD-MIB
+      groups:
+        - name: Juniper
+        - name: SNMP_TRAPS
+      items:
+        - uuid: af2d2a413d0a43c0aed318aac232e6b8
+          name: 'BFD Session All'
+          type: SNMP_AGENT
+          snmp_oid: 'walk[1.3.6.1.4.1.2636.5.3.1.1.2.1.13,1.3.6.1.4.1.2636.5.3.1.1.2.1.14,1.3.6.1.4.1.2636.3.45.1.1.1.1.5]'
+          key: 'bfdSess[discovery]'
+          delay: 1d
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            - type: SNMP_WALK_TO_JSON
+              parameters:
+                - addrtype
+                - 1.3.6.1.4.1.2636.5.3.1.1.2.1.13
+                - '0'
+                - sessaddr
+                - 1.3.6.1.4.1.2636.5.3.1.1.2.1.14
+                - '0'
+                - sessint
+                - 1.3.6.1.4.1.2636.3.45.1.1.1.1.5
+                - '0'
+            - type: JAVASCRIPT
+              parameters:
+                - |2
+                    function ipv4hexconv(item, i, arr) {
+                      if (i==0){
+                        resultip = resultip + parseInt(item, 16);
+                      }else{
+                        resultip = resultip + '.' + parseInt(item, 16);
+                        }
+                      //Редачим формат ipv4
+                    }
+                    
+                    function ipv6hexconv(item, i, arr) {
+                      if (i==0){
+                         if ((item=="00" && arr[i+1]=="00") || (item!=="00")){
+                           resultip = resultip + item;
+                         }
+                      }else if(i%2==0){
+                        if ((item=="00" && arr[i+1]=="00") || (item!=="00")){
+                          resultip = resultip + ":" + item.replace(/0(.*[^0])/,'$1');
+                        }else{resultip = resultip + ":";}
+                      }else{
+                        if ((arr[i-1]=="00") && (item!=="00")){
+                          resultip = resultip + item.replace(/0(.*[^0])/,'$1');
+                        }else{
+                          resultip = resultip + item;
+                        }
+                      }
+                      //Редачим формат ipv6
+                    }
+                    
+                    function ipv6format(item, i, arr) {
+                      if (item=="0000"){
+                        if (end_one==0){
+                          if (arr[i+1]=="0000"){
+                            start=start+1;
+                          }else{
+                            finalip = finalip + "::";
+                            start = 0;
+                            end_one = 1;
+                            end = 1;
+                          }
+                        }else{
+                          finalip = finalip + ":0";
+                        }
+                      }else{
+                         if (i==0){
+                           finalip = finalip + item;
+                         }else if (end==1){
+                           finalip = finalip + item;
+                           end=0
+                         }else{
+                            finalip = finalip + ":" + item;
+                          }
+                      }
+                    }
+                    
+                    function lld_obj_add(lld_one, index, lld_obj, lld_obj_ip) {
+                      if (lld_one.sessaddr) {
+                        //Берем ip из json
+                        lld_obj_ip = lld_one.sessaddr;
+                        if(lld_obj_ip.indexOf('"') == -1){
+                          arr = lld_obj_ip.split(" ");
+                          //Массив для промежуточного формата ip.
+                          resultip = '';
+                          //Массив для конечного ip.
+                          finalip = '';
+                          start = 0;
+                          end = 0;
+                          end_one = 0;
+                    
+                          if (lld_one.addrtype){
+                            if (lld_one.addrtype == '2'){
+                              //Для ipv6
+                              //Редачим формат ipv6
+                              arr.forEach(ipv6hexconv);
+                              octeti = resultip.split(":");
+                              //Записывает в finalip конечный результат
+                              octeti.forEach(ipv6format);
+                              lld_obj[index].sessaddr = finalip;
+                            }else{
+                              //Для ipv4
+                              //Редачим формат ipv4
+                              arr.forEach(ipv4hexconv);
+                              finalip = resultip;
+                              lld_obj[index].sessaddr = finalip;
+                            }
+                          }
+                        }
+                      }
+                    }
+                    
+                  lld_obj_ip = '';
+                  lld_obj = JSON.parse(value);
+                    
+                  lld_obj.forEach(lld_obj_add);
+                  
+                  return JSON.stringify(lld_obj);
+      discovery_rules:
+        - uuid: 421d3afd2ff045ff941e68327c391879
+          name: 'BFD Session Discovery for ipv4 and ipv6'
+          type: DEPENDENT
+          key: 'bfdSessAddrLLD[ipv4-ipv6]'
+          delay: '0'
+          lifetime: 1d
+          item_prototypes:
+            - uuid: ea78f48618084e84b41146366a7a1ccc
+              name: 'BFD {#SESSADDR} - [{#SESSINT}] Session: State'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2636.5.3.1.1.2.1.6.{#SNMPINDEX}'
+              key: 'jnxbfdSessState.ipv4.[{#SNMPINDEX}]'
+              delay: 3m
+              history: 2d
+              valuemap:
+                name: 'BFD-STD-MIB::bfdSessState'
+              trigger_prototypes:
+                - uuid: a4b3ce9671124b1fbb3ae24eda69932d
+                  expression: 'last(/Juniper BFD State and Traps/jnxbfdSessState.ipv4.[{#SNMPINDEX}])<>4'
+                  name: 'BFD Session: Not Up ({ITEM.LASTVALUE1})'
+                  opdata: 'IP: {#SESSADDR}, Int: {#SESSINT}'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+            - uuid: d7fd6934d44944f39ad9ba0ed9321e16
+              name: 'SNMP TRAP - BFD {#SESSADDR} - [{#SESSINT}] Session'
+              type: SNMP_TRAP
+              key: 'snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s.*($|\n)"]'
+              delay: '0'
+              history: 2d
+              trends: '0'
+              value_type: LOG
+              tags:
+                - tag: Application
+                  value: 'SNMP TRAPS'
+              trigger_prototypes:
+                - uuid: 1cc51febeb574913a3f499017f96e9bf
+                  expression: '(nodata(/Juniper BFD State and Traps/snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s.*($|\n)"],5m)=0) and find(/Juniper BFD State and Traps/snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s.*($|\n)"],,"regexp","bfdSessDown")=1'
+                  name: 'BFD Session: Down'
+                  opdata: 'IP: {#SESSADDR}, Int: {#SESSINT}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: bfd
+                - uuid: 924af44dc3b44146aba75972e238057f
+                  expression: '(nodata(/Juniper BFD State and Traps/snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s.*($|\n)"],5m)=0) and find(/Juniper BFD State and Traps/snmptrap["(bfdSessUp|bfdSessDown)(.|\n)*bfdSessAddrType\.{#SNMPINDEX}\s.*\:\s.*($|\n)"],,"regexp","bfdSessUp")=1'
+                  name: 'BFD Session: Up'
+                  opdata: 'IP: {#SESSADDR}, Int: {#SESSINT}'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: trap
+                      value: bfd
+          master_item:
+            key: 'bfdSess[discovery]'
+          lld_macro_paths:
+            - lld_macro: '{#ADDRTYPE}'
+              path: $.addrtype
+            - lld_macro: '{#SESSADDR}'
+              path: $.sessaddr
+            - lld_macro: '{#SESSINT}'
+              path: $.sessint
+      valuemaps:
+        - uuid: d5187761bc08472bba27178b932c0323
+          name: 'BFD-STD-MIB::bfdSessState'
+          mappings:
+            - value: '1'
+              newvalue: adminDown
+            - value: '2'
+              newvalue: down
+            - value: '3'
+              newvalue: init
+            - value: '4'
+              newvalue: up
