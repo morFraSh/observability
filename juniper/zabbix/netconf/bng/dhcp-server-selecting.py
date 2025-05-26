@@ -122,9 +122,10 @@ if __name__ == '__main__':
     parser.add_argument("--host", "-H", help='set host ip address', required=True, metavar='')
     parser.add_argument("--timeout", "-t", help='set host timeout', required=True, metavar='')
     parser.add_argument("--name_elem", "-e", help='set host name_elem', required=True, metavar='')
-    parser.add_argument("--config", "-c", help='set config file', required=True, metavar='')
     parser.add_argument("--hostname", "-n", help='set hostname', required=True, metavar='')
-    parser.add_argument("--company", "-C", help='set company name', required=True, metavar='')
+    parser.add_argument("--zabbix_username", "-zn", help='set zabbix username api', required=True, metavar='')
+    parser.add_argument("--zabbix_password", "-zp", help='set zabbix pswd. api', required=True, metavar='')
+    parser.add_argument("--zabbix_url", "-zu", help='set zabbix url api', required=True, metavar='')
     args = parser.parse_args()
 
     host_a = args.host
@@ -132,33 +133,11 @@ if __name__ == '__main__':
     ssh_key_a = args.key
     timeout_a = int(args.timeout)
     name_elem_a = args.name_elem
-    file_config_a = args.config
     hostname_a = args.hostname
-
-    name = args.company
-
-
-
-    with open(file_config_a, 'r', encoding='utf-8') as f:
-        config = load(f, Loader=Loader)
-        name_copmany = config['corps'][name]
-
-        # groupid_inc_access = tuple(name_copmany['gid']['groupid_inc_access'])
-        # groupid_inc_agg = tuple(name_copmany['gid']['groupid_inc_agg'])
-        # groupid_inc_poe = tuple(name_copmany['gid']['groupid_inc_poe'])
-        # groupid_core = tuple(name_copmany['gid']['groupid_core'])
-        # groupid_admin = tuple(name_copmany['gid']['groupid_admin'])
-        # groupid_econat = tuple(name_copmany['gid']['groupid_econat'])
-        # groupid_inc = tuple(
-        #     groupid_inc_access + groupid_inc_agg + groupid_inc_poe + groupid_core + groupid_admin + groupid_econat)
-
-        zabi_usr = name_copmany['zabbix']['user']
-        zabi_psw = name_copmany['zabbix']['password']
-        zabi_url = name_copmany['zabbix']['url']
-
-        zapi = ZabbixAPI(zabi_url)
+    zabi_usr = args.zabbix_username
+    zabi_psw = args.zabbix_password
+    zabi_url = args.zabbix_url
+    
+    zapi = ZabbixAPI(zabi_url)
 
     print(diag_exception())
-
-
-
