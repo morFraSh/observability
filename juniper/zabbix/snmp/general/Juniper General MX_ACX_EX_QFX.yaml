@@ -1081,7 +1081,7 @@ zabbix_export:
           filter:
             conditions:
               - macro: '{#SNMPVALUE}'
-                value: '^ge.*|^xe.*|^et.*|^ae.*|^lt.*|^ps.*|^ms.*|^ams.*|^mams.*|^irb.*|^gr.*|^ip.*'
+                value: '^ge.*|^xe.*|^et.*|^ae.*|^lt.*|^ps.*|^ms.*|^ams.*|^mams.*|^irb.*|^gr.*|^ip.*|^vcp.*'
                 formulaid: A
           lifetime: 5d
           item_prototypes:
@@ -2233,7 +2233,7 @@ zabbix_export:
           value: '(^ge.*)\-[0-9]+\/[0-9]+\/([0-9]+$|[0-9]+\:[0-9]+$)'
           description: 'search only ge interface'
         - macro: '{$PHY_INT_ERROR_MATCHES}'
-          value: '(^ge.*|^xe.*|^et.*|^lt.*|^ms.*|^mams.*)\-[0-9]+\/[0-9]+\/([0-9]+$|[0-9]+\:[0-9]+$)|(^ae[0-9]+|^ps[0-9]+|^ams[0-9]+)$'
+          value: '(^ge.*|^xe.*|^et.*|^lt.*|^ms.*|^mams.*|^vcp.*)\-[0-9]+\/[0-9]+\/([0-9]+$|[0-9]+\:[0-9]+$)|(^ae[0-9]+|^ps[0-9]+|^ams[0-9]+)$'
         - macro: '{$PHY_INT_PPS_MATCHES}'
           value: '^ge.*|^xe.*|^et.*|^ae.*|^lt.*|^ps.*|^ms.*|^ams.*|^mams.*|^irb.*|^gr.*|^ip.*'
         - macro: '{$TEMP_CRIT}'
