@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 
 
 def snmp_walkcmd(community, host_snmp, OID):
-    return (walkCmd(SnmpEngine(),
+    return (next(SnmpEngine(),
                     CommunityData(community),
                     UdpTransportTarget((host_snmp, 161), timeout=5),
                     ContextData(), '0', '20',
@@ -33,7 +33,7 @@ def get_interface_info(host_snmp, community, oid, snmpindex_value):
     for (errorIndication,
         errorStatus,
         errorIndex,
-        varBinds) in snmp_walkcmd(community, host_snmp, int_oid_dict[int_oid]):
+        varBinds) in snmp_walkcmd(community, host_snmp, oid):
                 
         if errorIndication:
             print(errorIndication)
