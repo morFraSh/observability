@@ -81,8 +81,8 @@ if __name__ == '__main__':
     int_oid_dict = {"{#FCFXOPERMODE}": "1.3.6.1.2.1.75.1.2.1.1.3",
                     "{#FCFXADMINSTATUS}": "1.3.6.1.2.1.75.1.2.2.1.1",
                     "{#FCFXOPERSTATUS}": "1.3.6.1.2.1.75.1.2.2.1.2",
-                    "{#FCFXALIAS}": "1.3.6.1.3.94.1.10.1.17.16.0.0.192.221.52",
-                    "{#FCFXNAME}": "1.3.6.1.3.94.1.10.1.18.16.0.0.192.221.52"}
+                    "{#FCFXALIAS}": "1.3.6.1.3.94.1.10.1.17.16.0.0.192.221",
+                    "{#FCFXNAME}": "1.3.6.1.3.94.1.10.1.18.16.0.0.192.221"}
     int_oid_ext_list = ['{#FCFXALIAS}','{#FCFXNAME}']
     
     all_port_dict = get_interface_info (int_oid_dict, snmpindex_value, snmpindex_value, int_oid_ext_list)
